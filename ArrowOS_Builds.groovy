@@ -36,19 +36,13 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage('Fetching configs from DB') {
-            /*sh  '''#!/bin/bash
-                    ssh root@31.14.133.234 -L 3307:127.0.0.1:3306 -N &
-                    dbcon_pid=$!
-                    sleep 10s
-
-                    set -x
-                '''*/
             echo "Establishing connection to configs DB...!"
             device_config_fetch(DEVICE)
         }
 
         stage("Hard reset") {
             try {
+                sh 'cd '+SOURCE_DIR+''
                 def stale_file = new File(STALE_PATHS_FILE)
                 if(stale_file.exists()) {
                     BufferedReader br = new BufferedReader(new FileReader(stale_file))
@@ -71,9 +65,34 @@ if(!ASSIGNED_NODE.isEmpty()) {
 	                echo "No temp paths file found!"
 	                echo "---------------------------------"
                 }
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Performing hard reset and clean!"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                repoStatus = sh(returnStatus: true,
+                                script: 'repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null'
+                                )
+
+                if(repoStatus == 0)
+                    echo "Hard rest and clean done!"
+                else
+                    echo "Hard reset and clean failed!"
+
             } catch (e) {
                 throw(e)
             }
+        }
+
+        stage('Repo sync') {
+            sh '''#!/bin/bash
+                cd '''+SOURCE_DIR+'''
+                rm -rf '''+SOURCE_DIR+'''/.repo/local_manifests
+                repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-10.0 --depth=1 > /dev/null
+                repo sync --force-sync --no-tags --no-clone-bundle -c -j4
+                '''
         }
     }
 }
