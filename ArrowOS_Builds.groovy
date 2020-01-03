@@ -94,6 +94,52 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 repo sync --force-sync --no-tags --no-clone-bundle -c -j4
                 '''
         }
+
+        stage('Clean plate') {
+            sh '''#!/bin/bash
+                cd '''+SOURCE_DIR+'''
+                source build/envsetup.sh
+
+                avail_space=$(df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1)
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Current Available Space: $avail_space"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+
+                if [ '''+env.force_clean.toString().trim()+''' == "yes" ]; then
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    echo " "
+                    echo "Force clean enabled!"
+                    echo "Performing a full clean"
+                    echo " "
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    mka clean
+                    return
+                else
+                    echo "Force clean not enabled"
+                fi
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Nuking product out!"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                rm -rf /source/arrow/out/target/product/*
+                if [ $? -eq 0 ]; then
+                    echo "Cleaned up product out dirs!"
+                else
+                    echo "Failed to nuke product out dirs"
+                fi
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Doing installclean"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                mka installclean
+                '''
+        }
     }
 }
 
