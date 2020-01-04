@@ -4,6 +4,17 @@ import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
 
+public Boolean checkTGplugin() {
+    def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
+    plugins.each { plugin ->
+        if(plugin.getShortName() == "telegram-notifications") {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 currentBuild.displayName = "${DEVICE}"
 currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 
@@ -41,6 +52,10 @@ if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
 
+        if(checkTGplugin()) {
+            telegramSend("[Build has started for ${DEVICE}](${BUILD_URL})\nExecuting @ ${ASSIGNED_NODE}")
+        }
+
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
         env.CCACHE_DIR = env.MAIN_DISK + "/.ccache".toString().trim()
@@ -73,7 +88,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage("Hard reset") {
-            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 sh '''#!/bin/bash
                     cd '''+env.SOURCE_DIR+'''
 
@@ -127,12 +141,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "Hard rest and clean done!"
                 else
                     echo "Hard reset and clean had issues!"
-                    sh 'exit 1'
-            }
         }
 
         stage('Repo sync') {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                 sh  '''#!/bin/bash
                         cd '''+env.SOURCE_DIR+'''
                         rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
@@ -142,7 +153,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
                             exit 1
                         fi
                     '''
-            }
         }
 
         stage('Clean plate') {
@@ -321,50 +331,48 @@ public def fetchConfigs(def DEVICE) {
 ---------------------------------------------------
 */
 public def deviceLunch() {
-    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        sh  '''#!/bin/bash
+    sh  '''#!/bin/bash
 
-                cd '''+env.SOURCE_DIR+'''
-                source build/envsetup.sh
+            cd '''+env.SOURCE_DIR+'''
+            source build/envsetup.sh
 
-                if [ '''+env.is_official+''' = "no" ]; then
-                    unset ARROW_OFFICIAL
+            if [ '''+env.is_official+''' = "no" ]; then
+                unset ARROW_OFFICIAL
+            fi
+
+            # Perform lunch for the main device as we might be needing them
+            # by the overriding device
+            if [ ! -z '''+env.buildtype+''' ]; then
+                lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+                if [ $? -ne 0 ]; then
+                    echo "Device lunch FAILED!"
+                    exit 1
                 fi
+            else
+                echo "No buildtype specified!"
+                exit 0
+            fi
 
-                # Perform lunch for the main device as we might be needing them
-                # by the overriding device
+            if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
+
                 if [ ! -z '''+env.buildtype+''' ]; then
-                    lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
-                    if [ $? -ne 0 ]; then
-                        echo "Device lunch FAILED!"
-                        exit 1
-                    fi
-                else
+                    lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
+                    lunch_ovr_ok=$?
+                else 
                     echo "No buildtype specified!"
                     exit 0
                 fi
 
-                if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
-
-                    if [ ! -z '''+env.buildtype+''' ]; then
-                        lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
-                        lunch_ovr_ok=$?
-                    else 
-                        echo "No buildtype specified!"
-                        exit 0
-                    fi
-
-                    if [ $lunch_ovr_ok -eq 0 ]; then
-                        echo "lunch override successfull!"
-                    else
-                        echo "Failed to override lunch"
-                        echo "Terminating build!"
-                        exit 0
-                    fi
+                if [ $lunch_ovr_ok -eq 0 ]; then
+                    echo "lunch override successfull!"
+                else
+                    echo "Failed to override lunch"
+                    echo "Terminating build!"
+                    exit 0
                 fi
+            fi
 
-            '''
-    }
+        '''
 }
 
 /*
@@ -373,112 +381,108 @@ public def deviceLunch() {
 -----------------------------------------------
 */
 public def delConfigRepos() {
-    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        def repoPaths = jsonParse(env.repo_paths)
+    def repoPaths = jsonParse(env.repo_paths)
 
-        repoPaths.repo_paths.each { rpath->
-            sh  '''#!/bin/bash
+    repoPaths.repo_paths.each { rpath->
+        sh  '''#!/bin/bash
 
-                    if [ -d '''+env.SOURCE_DIR+"/"+rpath+''' ]; then
-                        rm -rf '''+env.SOURCE_DIR+"/"+rpath+'''
-                        if [ $? -eq 0 ]; then
-                            echo "Deleted '''+rpath+''' "
-                        else
-                            echo "Failed to delete '''+rpath+''' "
-                            exit 1
-                        fi
+                if [ -d '''+env.SOURCE_DIR+"/"+rpath+''' ]; then
+                    rm -rf '''+env.SOURCE_DIR+"/"+rpath+'''
+                    if [ $? -eq 0 ]; then
+                        echo "Deleted '''+rpath+''' "
                     else
-                        echo "No such directory '''+rpath+''' "
+                        echo "Failed to delete '''+rpath+''' "
+                        exit 1
                     fi
+                else
+                    echo "No such directory '''+rpath+''' "
+                fi
 
-                '''
-        }
+            '''
     }
 }
 
 public def cloneConfigRepos() {
-    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        def repoClonesUrl = jsonParse(env.repo_clones)
-        def repoClonesPaths = jsonParse(env.repo_clones_paths)
+    def repoClonesUrl = jsonParse(env.repo_clones)
+    def repoClonesPaths = jsonParse(env.repo_clones_paths)
 
-        repoClonesUrl.repo_clones.eachWithIndex { url,i ->
-            def rurl = repoClonesUrl["repo_clones"][i]
-            def rpath = repoClonesPaths["repo_clones_paths"][i]
-            sh  '''#!/bin/bash
+    repoClonesUrl.repo_clones.eachWithIndex { url,i ->
+        def rurl = repoClonesUrl["repo_clones"][i]
+        def rpath = repoClonesPaths["repo_clones_paths"][i]
+        sh  '''#!/bin/bash
 
-                    cd '''+env.SOURCE_DIR+'''
-                    git clone '''+rurl+''' '''+rpath+''' --depth=1
-                    if [ $? -eq 0 ]; then
-                        echo "---------------------------------"
-                        echo "Cloned repo '''+rurl+''' into '''+rpath+''' "
-                        echo "---------------------------------"
+                cd '''+env.SOURCE_DIR+'''
+                git clone '''+rurl+''' '''+rpath+''' --depth=1
+                if [ $? -eq 0 ]; then
+                    echo "---------------------------------"
+                    echo "Cloned repo '''+rurl+''' into '''+rpath+''' "
+                    echo "---------------------------------"
 
-                        # store the paths into a temp file so that we can clean those repos on next
-                        # run in case the build gets interrupted and doesn't reach end of the script
-                        echo '''+rpath+''' >> '''+env.STALE_PATHS_FILE+'''
-                    else
-                        echo "---------------------------------"
-                        echo "Failed to clone repo '''+rurl+''' into '''+rpath+''' "
-                        echo "---------------------------------"
-                        exit 1
-                    fi
+                    # store the paths into a temp file so that we can clean those repos on next
+                    # run in case the build gets interrupted and doesn't reach end of the script
+                    echo '''+rpath+''' >> '''+env.STALE_PATHS_FILE+'''
+                else
+                    echo "---------------------------------"
+                    echo "Failed to clone repo '''+rurl+''' into '''+rpath+''' "
+                    echo "---------------------------------"
+                    exit 1
+                fi
 
-                '''
-        }
+            '''
     }
 }
 
 public def repopickTopics() {
-    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        def pickTopics = jsonParse(env.repopick_topics)
+    def pickTopics = jsonParse(env.repopick_topics)
 
-        pickTopics.repopick_topics.each { changeTopic ->
-            sh  '''#!/bin/bash
+    pickTopics.repopick_topics.each { changeTopic ->
+        sh  '''#!/bin/bash
 
-                    cd '''+env.SOURCE_DIR+'''
-                    source build/envsetup.sh
+                cd '''+env.SOURCE_DIR+'''
+                source build/envsetup.sh
 
-                    repopick -t '''+changeTopic+'''
-                    if [ $? -eq 0 ]; then
-                        echo "---------------------------------"
-                        echo "Repopicked topic '''+changeTopic+''' "
-                        echo "---------------------------------"
-                    else
-                        echo "---------------------------------"
-                        echo "Failed to repopick topic '''+changeTopic+''' "
-                        echo "---------------------------------"
-                    fi
+                repopick -t '''+changeTopic+'''
+                if [ $? -eq 0 ]; then
+                    echo "---------------------------------"
+                    echo "Repopicked topic '''+changeTopic+''' "
+                    echo "---------------------------------"
+                else
+                    echo "---------------------------------"
+                    echo "Failed to repopick topic '''+changeTopic+''' "
+                    echo "---------------------------------"
+                fi
 
-                '''
-        }
+            '''
     }
 }
 
 public def repopickChanges() {
-    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        def pickChanges = jsonParse(env.repopick_changes)
+    def pickChanges = jsonParse(env.repopick_changes)
 
-        pickChanges.repopick_changes.each { changeNum ->
-            sh  '''#!/bin/bash
+    pickChanges.repopick_changes.each { changeNum ->
+        sh  '''#!/bin/bash
 
-                    cd '''+env.SOURCE_DIR+'''
-                    source build/envsetup.sh
+                cd '''+env.SOURCE_DIR+'''
+                source build/envsetup.sh
 
-                    repopick '''+changeNum+'''
-                    if [ $? -eq 0 ]; then
-                        echo "---------------------------------"
-                        echo "Repopicked change number '''+changeNum+''' "
-                        echo "---------------------------------"
-                    else
-                        echo "---------------------------------"
-                        echo "Failed to repopick change number '''+changeNum+''' "
-                        echo "---------------------------------"
-                    fi
+                repopick '''+changeNum+'''
+                if [ $? -eq 0 ]; then
+                    echo "---------------------------------"
+                    echo "Repopicked change number '''+changeNum+''' "
+                    echo "---------------------------------"
+                else
+                    echo "---------------------------------"
+                    echo "Failed to repopick change number '''+changeNum+''' "
+                    echo "---------------------------------"
+                fi
 
-                '''
-        }
+            '''
     }
 }
 
 // Set build description as executed at end
 currentBuild.description = "Executed @ ${ASSIGNED_NODE}"
+
+if(checkTGplugin()) {
+    telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
+}
