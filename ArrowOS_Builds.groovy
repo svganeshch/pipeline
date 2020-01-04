@@ -2,6 +2,8 @@ import java.io.*;
 import java.sql.*; 
 import groovy.sql.Sql
 
+def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
+
 currentBuild.displayName = "${DEVICE}"
 currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 
@@ -39,13 +41,13 @@ if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
 
-        env.MAIN_DISK = "/source"
-        env.SOURCE_DIR = env.MAIN_DISK + "/arrow"
-        env.CCACHE_DIR = env.MAIN_DISK + "/.ccache"
-        env.STALE_PATHS_FILE = env.MAIN_DISK + "/temp_paths.txt"
+        env.MAIN_DISK = "/source".toString().trim()
+        env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
+        env.CCACHE_DIR = env.MAIN_DISK + "/.ccache".toString().trim()
+        env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
 
         stage('Exporting vars') {
-            sh  '''#!/bin/bash
+            sh  '''#!/bin/bash +x
 
                     # Linux exports
                     export PATH=~/bin:$PATH
@@ -71,30 +73,42 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage("Hard reset") {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                sh 'cd '+env.SOURCE_DIR+''
-                def stale_file = new File(env.STALE_PATHS_FILE)
-                if(stale_file.exists()) {
-                    BufferedReader br = new BufferedReader(new FileReader(stale_file))
+            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                sh '''#!/bin/bash
+                    cd '''+env.SOURCE_DIR+'''
 
-                    String stale_content;
-                    while((stale_content = br.readLine()) != null) {
+                    if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
+                        txt_content=$(cat '''+env.STALE_PATHS_FILE+''')
+                        if [ "$txt_content" != "" ]; then
+                            echo "------------------------------------------"
+                            echo "Deleting stale repos from previous build"
+                            echo "------------------------------------------"
+                            while IFS= read -r line
+                            do
+                                cd '''+env.SOURCE_DIR+'''
+                                rm -rf "$line" > /dev/null
+                                if [ $? -eq 0 ]; then
+                                    echo "---------------------------------"
+                                    echo "Deleted directory $line"
+                                    echo "---------------------------------"
+                                else
+                                    echo "---------------------------------"
+                                    echo "Failed to delete directory $line"
+                                    echo "---------------------------------"
+                                fi
+                            done < '''+env.STALE_PATHS_FILE+'''
+                            > '''+env.STALE_PATHS_FILE+'''
+                        else
+                            echo "---------------------------------"
+                            echo "No stale repos present!"
+                            echo "---------------------------------"
+                        fi
+                    else
                         echo "---------------------------------"
-                        echo "Deleting stale repos from previous build"
-		                echo "---------------------------------"
-
-                        def dir = new File(stale_content)
-                        if(dir.exists()) {
-                            if(dir.deleteDir()) {
-                                echo "Deleted path ${stale_content}"
-                            }
-                        }
-                    }
-                } else {
-                    echo "---------------------------------"
-	                echo "No temp paths file found!"
-	                echo "---------------------------------"
-                }
+                        echo "No stale paths file found!"
+                        echo "---------------------------------"
+                    fi
+                    '''
 
                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                 echo " "
@@ -103,24 +117,32 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                 echo " "
                 repoStatus = sh(returnStatus: true,
-                                script: 'repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null'
+                                script: '''#!/bin/bash
+                                            cd '''+env.SOURCE_DIR+'''
+                                            repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null
+                                        '''
                                 )
 
                 if(repoStatus == 0)
                     echo "Hard rest and clean done!"
                 else
-                    echo "Hard reset and clean failed!"
+                    echo "Hard reset and clean had issues!"
                     sh 'exit 1'
             }
         }
 
         stage('Repo sync') {
-            sh  '''#!/bin/bash
-                    cd '''+env.SOURCE_DIR+'''
-                    rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                    repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-10.0 --depth=1 > /dev/null
-                    repo sync --force-sync --no-tags --no-clone-bundle -c -j4
-                '''
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh  '''#!/bin/bash
+                        cd '''+env.SOURCE_DIR+'''
+                        rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
+                        repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-10.0 --depth=1 > /dev/null
+                        repo sync --force-sync --no-tags --no-clone-bundle -c -j4
+                        if [ $? -ne 0 ]; then
+                            exit 1
+                        fi
+                    '''
+            }
         }
 
         stage('Clean plate') {
@@ -153,7 +175,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "Nuking product out!"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    rm -rf /source/arrow/out/target/product/*
+                    rm -rf '''+env.SOURCE_DIR+'''/out/target/product/*
                     if [ $? -eq 0 ]; then
                         echo "Cleaned up product out dirs!"
                     else
@@ -172,12 +194,31 @@ if(!ASSIGNED_NODE.isEmpty()) {
         stage('Device lunch') {
             deviceLunch()
         }
+
+        stage('Parsing configs data') {
+            delConfigRepos()
+            cloneConfigRepos()
+            repopickTopics()
+            repopickChanges()
+
+            // Fetch common configs and apply
+            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+            echo "Fetching common configuration"
+            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+            setConfigsData(false, "common_config", false)
+            delConfigRepos()
+            cloneConfigRepos()
+            repopickTopics()
+            repopickChanges()
+        }
     }
 }
 
-/* -----------------------------------------------------
-// Database connection stage
--------------------------------------------------------*/
+/* 
+-----------------------------------------------------
+    Database connection stage   
+-------------------------------------------------------
+*/
 @NonCPS
 public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobalOvr) {
     try {
@@ -215,8 +256,8 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                                         env.buildtype = configs.default_buildtype.toString().trim()
                                     }
                                 }
-                                return
                             }
+                            return
                         }
 
                         env.repo_paths = isDevOvr ? configs.ovr_repo_paths.toString().trim() : configs.repo_paths.toString().trim()
@@ -274,50 +315,170 @@ public def fetchConfigs(def DEVICE) {
     }
 }
 
-/* ---------------------------------------------------
+/*
+---------------------------------------------------
     Device lunch stage
-   ---------------------------------------------------
+---------------------------------------------------
 */
 public def deviceLunch() {
-    sh  '''#!/bin/bash
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        sh  '''#!/bin/bash
 
-            cd '''+env.SOURCE_DIR+'''
-            source build/envsetup.sh
+                cd '''+env.SOURCE_DIR+'''
+                source build/envsetup.sh
 
-            if [ '''+env.is_official+''' = "no" ]; then
-                unset ARROW_OFFICIAL
-            fi
-
-            # Perform lunch for the main device as we might be needing them
-            # by the overriding device
-            if [ ! -z '''+env.buildtype+''' ]; then
-                lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
-                if [ $? -ne 0 ]; then
-                    echo "Device lunch FAILED!"
-                    exit 1
+                if [ '''+env.is_official+''' = "no" ]; then
+                    unset ARROW_OFFICIAL
                 fi
-            else
-                echo "No buildtype specified!"
-                exit 0
-            fi
 
-            if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
-
+                # Perform lunch for the main device as we might be needing them
+                # by the overriding device
                 if [ ! -z '''+env.buildtype+''' ]; then
-                    lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
-                    lunch_ovr_ok=$?
-                else 
+                    lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+                    if [ $? -ne 0 ]; then
+                        echo "Device lunch FAILED!"
+                        exit 1
+                    fi
+                else
                     echo "No buildtype specified!"
                     exit 0
                 fi
 
-                if [ $lunch_ovr_ok -eq 0 ]; then
-                    echo "lunch override successfull!"
-                else
-                    echo "Failed to override lunch"
-                    echo "Terminating build!"
-                    exit 0
+                if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
+
+                    if [ ! -z '''+env.buildtype+''' ]; then
+                        lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
+                        lunch_ovr_ok=$?
+                    else 
+                        echo "No buildtype specified!"
+                        exit 0
+                    fi
+
+                    if [ $lunch_ovr_ok -eq 0 ]; then
+                        echo "lunch override successfull!"
+                    else
+                        echo "Failed to override lunch"
+                        echo "Terminating build!"
+                        exit 0
+                    fi
                 fi
-            fi
-        '''
+
+            '''
+    }
 }
+
+/*
+-----------------------------------------------
+    Delete config repos stage
+-----------------------------------------------
+*/
+public def delConfigRepos() {
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        def repoPaths = jsonParse(env.repo_paths)
+
+        repoPaths.repo_paths.each { rpath->
+            sh  '''#!/bin/bash
+
+                    if [ -d '''+env.SOURCE_DIR+"/"+rpath+''' ]; then
+                        rm -rf '''+env.SOURCE_DIR+"/"+rpath+'''
+                        if [ $? -eq 0 ]; then
+                            echo "Deleted '''+rpath+''' "
+                        else
+                            echo "Failed to delete '''+rpath+''' "
+                            exit 1
+                        fi
+                    else
+                        echo "No such directory '''+rpath+''' "
+                    fi
+
+                '''
+        }
+    }
+}
+
+public def cloneConfigRepos() {
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        def repoClonesUrl = jsonParse(env.repo_clones)
+        def repoClonesPaths = jsonParse(env.repo_clones_paths)
+
+        repoClonesUrl.repo_clones.eachWithIndex { url,i ->
+            def rurl = repoClonesUrl["repo_clones"][i]
+            def rpath = repoClonesPaths["repo_clones_paths"][i]
+            sh  '''#!/bin/bash
+
+                    cd '''+env.SOURCE_DIR+'''
+                    git clone '''+rurl+''' '''+rpath+''' --depth=1
+                    if [ $? -eq 0 ]; then
+                        echo "---------------------------------"
+                        echo "Cloned repo '''+rurl+''' into '''+rpath+''' "
+                        echo "---------------------------------"
+
+                        # store the paths into a temp file so that we can clean those repos on next
+                        # run in case the build gets interrupted and doesn't reach end of the script
+                        echo '''+rpath+''' >> '''+env.STALE_PATHS_FILE+'''
+                    else
+                        echo "---------------------------------"
+                        echo "Failed to clone repo '''+rurl+''' into '''+rpath+''' "
+                        echo "---------------------------------"
+                        exit 1
+                    fi
+
+                '''
+        }
+    }
+}
+
+public def repopickTopics() {
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        def pickTopics = jsonParse(env.repopick_topics)
+
+        pickTopics.repopick_topics.each { changeTopic ->
+            sh  '''#!/bin/bash
+
+                    cd '''+env.SOURCE_DIR+'''
+                    source build/envsetup.sh
+
+                    repopick -t '''+changeTopic+'''
+                    if [ $? -eq 0 ]; then
+                        echo "---------------------------------"
+                        echo "Repopicked topic '''+changeTopic+''' "
+                        echo "---------------------------------"
+                    else
+                        echo "---------------------------------"
+                        echo "Failed to repopick topic '''+changeTopic+''' "
+                        echo "---------------------------------"
+                    fi
+
+                '''
+        }
+    }
+}
+
+public def repopickChanges() {
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        def pickChanges = jsonParse(env.repopick_changes)
+
+        pickChanges.repopick_changes.each { changeNum ->
+            sh  '''#!/bin/bash
+
+                    cd '''+env.SOURCE_DIR+'''
+                    source build/envsetup.sh
+
+                    repopick '''+changeNum+'''
+                    if [ $? -eq 0 ]; then
+                        echo "---------------------------------"
+                        echo "Repopicked change number '''+changeNum+''' "
+                        echo "---------------------------------"
+                    else
+                        echo "---------------------------------"
+                        echo "Failed to repopick change number '''+changeNum+''' "
+                        echo "---------------------------------"
+                    fi
+
+                '''
+        }
+    }
+}
+
+// Set build description as executed at end
+currentBuild.description = "Executed @ ${ASSIGNED_NODE}"
