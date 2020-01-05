@@ -202,7 +202,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage('Device lunch') {
-            deviceLunch()
+            def is_gapps="no"
+            deviceLunch(is_gapps)
         }
 
         stage('Parsing configs data') {
@@ -241,7 +242,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 '''
 
             stage("Device lunch") {
-                deviceLunch()
+                def is_gapps="yes"
+                deviceLunch(is_gapps)
             }
 
             stage("Compiling") {
@@ -368,7 +370,7 @@ public def fetchConfigs(def DEVICE) {
     Device lunch stage
 ---------------------------------------------------
 */
-public def deviceLunch() {
+public def deviceLunch(def is_gapps) {
     sh  '''#!/bin/bash
 
             cd '''+env.SOURCE_DIR+'''
@@ -378,6 +380,12 @@ public def deviceLunch() {
 
             if [ '''+env.is_official+''' = "no" ]; then
                 unset ARROW_OFFICIAL
+            fi
+
+            if [ '''+is_gapps+''' = "yes" ]; then
+                export ARROW_GAPPS=true
+            else
+                export ARROW_GAPPS=false
             fi
 
             # Perform lunch for the main device as we might be needing them
@@ -446,7 +454,7 @@ public def getTgVars(def tg_key) {
 
 /*
 -----------------------------------------------
-    Delete config repos stage
+    Delete config repos
 -----------------------------------------------
 */
 public def delConfigRepos() {
@@ -471,6 +479,11 @@ public def delConfigRepos() {
     }
 }
 
+/*
+-----------------------------------------------
+    Clone config repos
+-----------------------------------------------
+*/
 public def cloneConfigRepos() {
     def repoClonesUrl = jsonParse(env.repo_clones)
     def repoClonesPaths = jsonParse(env.repo_clones_paths)
@@ -501,6 +514,11 @@ public def cloneConfigRepos() {
     }
 }
 
+/*
+-----------------------------------------------
+    Repopick config topics
+-----------------------------------------------
+*/
 public def repopickTopics() {
     def pickTopics = jsonParse(env.repopick_topics)
 
@@ -525,6 +543,11 @@ public def repopickTopics() {
     }
 }
 
+/*
+-----------------------------------------------
+    Repopick config change numbers
+-----------------------------------------------
+*/
 public def repopickChanges() {
     def pickChanges = jsonParse(env.repopick_changes)
 
@@ -549,6 +572,11 @@ public def repopickChanges() {
     }
 }
 
+/*
+-----------------------------------------------
+    Compiling stage
+-----------------------------------------------
+*/
 public def deviceCompile() {
     sh  '''#!/bin/bash
 
@@ -619,6 +647,12 @@ public def deviceCompile() {
         '''
 }
 
+
+/*
+-----------------------------------------------
+    Update & Notify stage
+-----------------------------------------------
+*/
 public def uploadNotify() {
     sh  '''#!/bin/bash
             
@@ -698,7 +732,7 @@ public def uploadNotify() {
 
                 # Telegram notify
                 if [ $notify -eq 0 ]; then
-                    $('''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title "'''+env.TG_TITLE+'''" --text "Download it from [HERE](${TG_DOWN_URL}) [XDA](${'''+env.xda_link+'''})\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n${'''+env.changelog+'''}\n\n**Source Changelog**\n${'''+env.common_changelog+'''}\n\n ~@ArrowOS")
+                    $('''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title "'''+env.TG_TITLE+'''" --text "Download it from [HERE](${TG_DOWN_URL}) [XDA](${'''+env.xda_link+'''})\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n${'''+env.changelog+'''}\n\n**Source Changelog**\n${'''+env.common_changelog+'''}\n\n ~@ArrowOS") > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "NOTIFIED UPDATE ON CHANNEL"
                     else
