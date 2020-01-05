@@ -223,72 +223,34 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage('Compiling') {
-            sh  '''#!/bin/bash
-
-                    # Linux exports
-                    export PATH=~/bin:$PATH
-                    export USE_CCACHE=1
-                    export CCACHE_COMPRESS=1
-                    export CCACHE_DIR='''+env.CCACHE_DIR+'''
-                    export KBUILD_BUILD_USER=release
-                    export KBUILD_BUILD_HOST=ArrowOS
-                    export LOCALVERSION=-Arrow
-
-                    # Rom exports
-                    export SELINUX_IGNORE_NEVERALLOWS=true
-                    export ALLOW_MISSING_DEPENDENCIES=true
-                    export ARROW_OFFICIAL=true
-                    export ARROW_GAPPS=false
-
-                    cd '''+env.SOURCE_DIR+'''
-                    source build/envsetup.sh > /dev/null
-
-                    if [ '''+env.is_official+''' = "no" ]; then
-                        unset ARROW_OFFICIAL
-                    fi
-
-                    # Perform lunch for the main device as we might be needing them
-                    # by the overriding device
-                    if [ ! -z '''+env.buildtype+''' ]; then
-                        lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
-                        if [ $? -ne 0 ]; then
-                            echo "Device lunch FAILED!"
-                            exit 1
-                        fi
-                    else
-                        echo "No buildtype specified!"
-                        exit 0
-                    fi
-
-                    if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
-
-                        if [ ! -z '''+env.buildtype+''' ]; then
-                            lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
-                            lunch_ovr_ok=$?
-                        else 
-                            echo "No buildtype specified!"
-                            exit 0
-                        fi
-
-                        if [ $lunch_ovr_ok -eq 0 ]; then
-                            echo "lunch override successfull!"
-                        else
-                            echo "Failed to override lunch"
-                            echo "Terminating build!"
-                            exit 0
-                        fi
-                    fi
-
-                    if [ '''+env.bootimage+''' = "yes" ]; then
-                        mka bootimage
-                    else
-                        mka bacon
-                    fi
-                '''
+            deviceCompile()
         }
 
         stage("Upload & Notify") {
-            updateNotify()
+            uploadNotify()
+        }
+
+        // Gapps build stage
+        stage("Gapps build") {
+            sh  '''#!/bin/bash
+
+                    if [ ! -d '''+env.SOURCE_DIR+'''/vendor/gapps ]; then
+                        echo "GApps vendor directory not found!"
+                        exit 1
+                    fi
+                '''
+
+            stage("Device lunch") {
+                deviceLunch()
+            }
+
+            stage("Compiling") {
+                deviceCompile()
+            }
+
+            stage("Upload & Notify") {
+                uploadNotify()
+            }
         }
     }
 }
@@ -580,7 +542,77 @@ public def repopickChanges() {
     }
 }
 
-public def updateNotify() {
+public def deviceCompile() {
+    sh  '''#!/bin/bash
+
+            # Linux exports
+            export PATH=~/bin:$PATH
+            export USE_CCACHE=1
+            export CCACHE_COMPRESS=1
+            export CCACHE_DIR='''+env.CCACHE_DIR+'''
+            export KBUILD_BUILD_USER=release
+            export KBUILD_BUILD_HOST=ArrowOS
+            export LOCALVERSION=-Arrow
+
+            # Rom exports
+            export SELINUX_IGNORE_NEVERALLOWS=true
+            export ALLOW_MISSING_DEPENDENCIES=true
+            export ARROW_OFFICIAL=true
+
+            if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then 
+                export ARROW_GAPPS=true
+            else
+                export ARROW_GAPPS=false
+            fi
+
+            cd '''+env.SOURCE_DIR+'''
+            source build/envsetup.sh > /dev/null
+
+            if [ '''+env.is_official+''' = "no" ]; then
+                unset ARROW_OFFICIAL
+            fi
+
+            # Perform lunch for the main device as we might be needing them
+            # by the overriding device
+            if [ ! -z '''+env.buildtype+''' ]; then
+                lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+                if [ $? -ne 0 ]; then
+                    echo "Device lunch FAILED!"
+                    exit 1
+                fi
+            else
+                echo "No buildtype specified!"
+                exit 0
+            fi
+
+            if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
+
+                if [ ! -z '''+env.buildtype+''' ]; then
+                    lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
+                    lunch_ovr_ok=$?
+                else 
+                    echo "No buildtype specified!"
+                    exit 0
+                fi
+
+                if [ $lunch_ovr_ok -eq 0 ]; then
+                    echo "lunch override successfull!"
+                else
+                    echo "Failed to override lunch"
+                    echo "Terminating build!"
+                    exit 0
+                fi
+            fi
+
+            if [ '''+env.bootimage+''' = "yes" ]; then
+                mka bootimage
+            else
+                mka bacon
+            fi
+        '''
+}
+
+public def uploadNotify() {
     sh  '''#!/bin/bash
             
             cd '''+env.SOURCE_DIR+'''
@@ -634,6 +666,9 @@ public def updateNotify() {
                         echo "-----------------------------------------------"
                         echo "Generating ota json"
                         echo "-----------------------------------------------"
+                        if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then 
+                            export '''+env.TG_BUILD_ZIP_TYPE+'''
+                        fi
                         python genOTA.py > /dev/null
                         if [ $? -eq 0 ]; then
                             git add *.json
@@ -676,6 +711,8 @@ public def updateNotify() {
                 fi
             else
                 echo "NOTHING TO UPLOAD! NO FILE FOUND!"
+                echo "NOT PROCEEDING WITH GAPPS BUILD...!!"
+                exit 1
             fi
 
         '''
