@@ -21,9 +21,13 @@ currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 environment {
     def MAIN_DISK
     def SOURCE_DIR
+    def OTA_DIR
+    def OTA_REPO_URL
     def CCACHE_DIR
     def STALE_PATHS_FILE
     def TG_VARS_FILE
+    def NOTIFY_REPO_DIR
+    def NOTIFY_REPO_URL
 
     // device config holders
     def lunch_override_name
@@ -41,6 +45,7 @@ environment {
     def buildtype
     def bootimage
     def changelog
+    def common_changelog
     def xda_link
     def global_override
     def default_buildtype_state
@@ -56,6 +61,7 @@ environment {
     def TG_TITLE
     def TG_DATE
     def TG_HASHTAGS
+    def BUILD_OUT_DIR
 }
 
 if(!ASSIGNED_NODE.isEmpty()) {
@@ -68,31 +74,13 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
+        env.OTA_DIR = env.MAIN_DISK + "/arrow_ota".toString().trim()
+        env.OTA_REPO_URL = "git@github.com:ArrowOS/arrow_ota.git"
         env.CCACHE_DIR = env.MAIN_DISK + "/.ccache".toString().trim()
         env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
         env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
-
-        stage('Exporting vars') {
-            sh  '''#!/bin/bash +x
-
-                    # Linux exports
-                    export PATH=~/bin:$PATH
-                    export USE_CCACHE=1
-                    export CCACHE_COMPRESS=1
-                    export CCACHE_DIR='''+env.CCACHE_DIR+'''
-                    export KBUILD_BUILD_USER=release
-                    export KBUILD_BUILD_HOST=ArrowOS
-                    export LOCALVERSION=-Arrow
-
-                    # Rom exports
-                    export SELINUX_IGNORE_NEVERALLOWS=true
-                    export ALLOW_MISSING_DEPENDENCIES=true
-                    export ARROW_OFFICIAL=true
-                    export ARROW_GAPPS=false
-
-                    cd '''+env.SOURCE_DIR+'''
-                '''
-        }
+        env.NOTIFY_REPO_DIR = env.MAIN_DISK + "/arrow_notify"
+        env.NOTIFY_REPO_URL = "git@github.com:ArrowOS/arrow_notify.git"
 
         stage('Fetching configs from DB') {
             echo "Establishing connection to configs DB...!"
@@ -100,7 +88,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage("Hard reset") {
-                sh '''#!/bin/bash
+                sh '''#!/bin/bash +x
                     cd '''+env.SOURCE_DIR+'''
 
                     if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
@@ -170,7 +158,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         stage('Clean plate') {
             sh  '''#!/bin/bash
                     cd '''+env.SOURCE_DIR+'''
-                    source build/envsetup.sh
+                    source build/envsetup.sh > /dev/null
 
                     avail_space=$(df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1)
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
@@ -233,6 +221,75 @@ if(!ASSIGNED_NODE.isEmpty()) {
             repopickTopics()
             repopickChanges()
         }
+
+        stage('Compiling') {
+            sh  '''#!/bin/bash
+
+                    # Linux exports
+                    export PATH=~/bin:$PATH
+                    export USE_CCACHE=1
+                    export CCACHE_COMPRESS=1
+                    export CCACHE_DIR='''+env.CCACHE_DIR+'''
+                    export KBUILD_BUILD_USER=release
+                    export KBUILD_BUILD_HOST=ArrowOS
+                    export LOCALVERSION=-Arrow
+
+                    # Rom exports
+                    export SELINUX_IGNORE_NEVERALLOWS=true
+                    export ALLOW_MISSING_DEPENDENCIES=true
+                    export ARROW_OFFICIAL=true
+                    export ARROW_GAPPS=false
+
+                    cd '''+env.SOURCE_DIR+'''
+                    source build/envsetup.sh > /dev/null
+
+                    if [ '''+env.is_official+''' = "no" ]; then
+                        unset ARROW_OFFICIAL
+                    fi
+
+                    # Perform lunch for the main device as we might be needing them
+                    # by the overriding device
+                    if [ ! -z '''+env.buildtype+''' ]; then
+                        lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+                        if [ $? -ne 0 ]; then
+                            echo "Device lunch FAILED!"
+                            exit 1
+                        fi
+                    else
+                        echo "No buildtype specified!"
+                        exit 0
+                    fi
+
+                    if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
+
+                        if [ ! -z '''+env.buildtype+''' ]; then
+                            lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
+                            lunch_ovr_ok=$?
+                        else 
+                            echo "No buildtype specified!"
+                            exit 0
+                        fi
+
+                        if [ $lunch_ovr_ok -eq 0 ]; then
+                            echo "lunch override successfull!"
+                        else
+                            echo "Failed to override lunch"
+                            echo "Terminating build!"
+                            exit 0
+                        fi
+                    fi
+
+                    if [ '''+env.bootimage+''' = "yes" ]; then
+                        mka bootimage
+                    else
+                        mka bacon
+                    fi
+                '''
+        }
+
+        stage("Upload & Notify") {
+            updateNotify()
+        }
     }
 }
 
@@ -256,14 +313,10 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                     dbcon.eachRow("select * from "+whichDevice+"") {
                         configs->
                         if(whichDevice == "common_config" && isGlobalOvr) {
-                            global_override = configs.global_override.toString().trim()
-                            if(global_override == "yes") {
+                            env.global_override = configs.global_override.toString().trim()
+                            if(env.global_override == "yes") {
                                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                                 echo "Fetching global overrides!"
-                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-
-                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                                echo "Global overrides set to ${global_override}"
                                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
                                 env.force_clean = configs.force_clean.toString().trim()
@@ -275,7 +328,7 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
 
                                 if(env.default_buildtype_state == "yes") {
                                     dbcon.eachRow("SELECT * FROM "+DEVICE+"") {
-                                        env.buildtype = configs.default_buildtype.toString().trim()
+                                        env.buildtype = it.default_buildtype.toString().trim()
                                     }
                                 }
                             }
@@ -293,6 +346,10 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                         env.buildtype = isDevOvr ? configs.ovr_buildtype.toString().trim() : configs.buildtype.toString().trim()
                         env.bootimage = isDevOvr ? configs.ovr_bootimage.toString().trim() : configs.bootimage
                         env.changelog = isDevOvr ? configs.ovr_changelog.toString().trim() : configs.changelog.toString().trim()
+
+                        if(whichDevice == "common_config") {
+                            env.common_changelog = configs.changelog.toString().trim()
+                        }
 
                         if(whichDevice != "common_config") {
                             env.lunch_override_name = configs.lunch_override_name.toString().trim()
@@ -346,7 +403,9 @@ public def deviceLunch() {
     sh  '''#!/bin/bash
 
             cd '''+env.SOURCE_DIR+'''
-            source build/envsetup.sh
+            source build/envsetup.sh > /dev/null
+
+            export ARROW_OFFICIAL=true
 
             if [ '''+env.is_official+''' = "no" ]; then
                 unset ARROW_OFFICIAL
@@ -392,8 +451,11 @@ public def deviceLunch() {
             echo TG_TITLE "Update $(get_build_var TARGET_DEVICE) ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+TG_VARS_FILE+'''
             echo TG_DATE `date +'%d/%m/%Y'` >> '''+TG_VARS_FILE+'''
             echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+TG_VARS_FILE+'''
+            echo BUILD_OUT_DIR $OUT >> '''+TG_VARS_FILE+'''
 
         '''
+
+        // Set holder vars
         env.TG_DEVICE = getTgVars("TG_DEVICE")
         env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE")
         env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE")
@@ -401,6 +463,7 @@ public def deviceLunch() {
         env.TG_TITLE = getTgVars("TG_TITLE")
         env.TG_DATE = getTgVars("TG_DATE")
         env.TG_HASHTAGS = getTgVars("TG_HASHTAGS")
+        env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR")
 }
 
 public def getTgVars(def tg_key) {
@@ -476,7 +539,7 @@ public def repopickTopics() {
         sh  '''#!/bin/bash
 
                 cd '''+env.SOURCE_DIR+'''
-                source build/envsetup.sh
+                source build/envsetup.sh > /dev/null
 
                 repopick -t '''+changeTopic+'''
                 if [ $? -eq 0 ]; then
@@ -500,7 +563,7 @@ public def repopickChanges() {
         sh  '''#!/bin/bash
 
                 cd '''+env.SOURCE_DIR+'''
-                source build/envsetup.sh
+                source build/envsetup.sh > /dev/null
 
                 repopick '''+changeNum+'''
                 if [ $? -eq 0 ]; then
@@ -515,6 +578,107 @@ public def repopickChanges() {
 
             '''
     }
+}
+
+public def updateNotify() {
+    sh  '''#!/bin/bash
+            
+            cd '''+env.SOURCE_DIR+'''
+            if [ '''+env.bootimage+''' = "yes" ]; then
+                cd '''+env.BUILD_OUT_DIR+'''
+                BUILD_ARTIFACT=$(ls -t boot.img | head -1)
+                TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
+            else
+                cd '''+env.BUILD_OUT_DIR+'''
+                BUILD_ARTIFACT=$(ls -t Arrow-v10.0-*-'''+env.TG_BUILD_ZIP_TYPE+'''.zip | head -1)
+                TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
+            fi
+
+            if [ -f $TO_UPLOAD ]; then
+                if [ '''+env.test_build+''' = "yes" ]; then
+                    export test_notify=0
+
+                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/EXPERIMENTS/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    if [ $? -eq 0 ]; then
+                        echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
+                        notify=0
+                    else
+                        echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
+                        notify=1
+                    fi
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
+                else
+                    export test_notify=1
+
+                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/arrow-10.0/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    if [ $? -eq 0 ]; then
+                        echo "SUCCESSFULLY UPLOADED TO SF SERVERS"
+                        notify=0
+                    else
+                        echo "FAILED TO UPLOAD TO SF SERVERS"
+                        notify=1
+                    fi
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
+
+                    # Generate OTA
+                    if [ "$bootimage" = "no" ] && [ $notify -eq 0 ]; then
+                        # Clone ota repo if it doesn't exist
+                        if [ ! -d '''+env.OTA_DIR+''' ]; then
+                            git clone '''+env.OTA_REPO_URL+''' '''+env.OTA_DIR+'''
+                        fi
+
+                        cd '''+env.OTA_DIR+'''
+                        git reset --hard
+                        git pull -f origin master
+                        git checkout master
+                        echo "-----------------------------------------------"
+                        echo "Generating ota json"
+                        echo "-----------------------------------------------"
+                        python genOTA.py > /dev/null
+                        if [ $? -eq 0 ]; then
+                            git add *.json
+                            git commit -m "['''+env.TG_DEVICE+''']: otagen for $BUILD_ARTIFACT ['''+env.TG_BUILD_ZIP_TYPE+''']"
+                            git push origin master
+                        else
+                            echo "Failed to push otagen for '''+env.TG_DEVICE+''' [$BUILD_ARTIFACT] ['''+env.TG_BUILD_ZIP_TYPE+''']"
+                        fi
+                        echo ""
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    fi
+                fi
+
+                # Check for our notify repo dir
+                if [ $notify -eq 0 ]; then
+                    if [ ! -d '''+env.NOTIFY_REPO_DIR+''' ]; then
+                        git clone --recurse-submodules '''+env.NOTIFY_REPO_URL+''' '''+env.NOTIFY_REPO_DIR+'''
+                    fi
+                fi
+
+                # Telegram notify
+                if [ $notify -eq 0 ]; then
+                    $('''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title "'''+env.TG_TITLE+'''" --text "Download it from [HERE](${TG_DOWN_URL}) [XDA](${'''+env.xda_link+'''})\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n${'''+env.changelog+'''}\n\n**Source Changelog**\n${'''+env.common_changelog+'''}\n\n ~@ArrowOS")
+                    if [ $? -eq 0 ]; then
+                        echo "NOTIFIED UPDATE ON CHANNEL"
+                    else
+                        echo "FAILED TO NOTIFY ON CHANNEL"
+                    fi
+                fi
+
+                # Tweet notify
+                if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
+                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
+                    $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
+                    if [ $? -eq 0 ]; then
+                        echo "POSTED ON TWITTER"
+                    else
+                        echo "FAILED TO POST ON TWITTER"
+                    fi
+                fi
+            else
+                echo "NOTHING TO UPLOAD! NO FILE FOUND!"
+            fi
+
+        '''
 }
 
 // Set build description as executed at end
