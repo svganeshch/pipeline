@@ -76,7 +76,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
         env.OTA_DIR = env.MAIN_DISK + "/arrow_ota".toString().trim()
         env.OTA_REPO_URL = "git@github.com:ArrowOS/arrow_ota.git"
-        env.CCACHE_DIR = env.MAIN_DISK + "/.ccache".toString().trim()
+        env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
         env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
         env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
         env.NOTIFY_REPO_DIR = env.MAIN_DISK + "/arrow_notify"
