@@ -383,6 +383,7 @@ public def deviceLunch(def is_gapps) {
             fi
 
             if [ '''+is_gapps+''' = "yes" ]; then
+                mka installclean
                 export ARROW_GAPPS=true
             else
                 export ARROW_GAPPS=false
