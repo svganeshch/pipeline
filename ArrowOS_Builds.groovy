@@ -694,7 +694,7 @@ public def uploadNotify() {
                     TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
 
                     # Generate OTA
-                    if [ "$bootimage" = "no" ] && [ $notify -eq 0 ]; then
+                    if [ '''+env.bootimage+''' = "no" ] && [ $notify -eq 0 ]; then
                         # Clone ota repo if it doesn't exist
                         if [ ! -d '''+env.OTA_DIR+''' ]; then
                             git clone '''+env.OTA_REPO_URL+''' '''+env.OTA_DIR+'''
