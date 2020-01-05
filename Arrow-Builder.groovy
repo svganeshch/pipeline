@@ -733,7 +733,7 @@ public def uploadNotify() {
 
                 # Telegram notify
                 if [ $notify -eq 0 ]; then
-                    $('''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title "'''+env.TG_TITLE+'''" --text "Download it from [HERE](${TG_DOWN_URL}) [XDA](${'''+env.xda_link+'''})\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n${'''+env.changelog+'''}\n\n**Source Changelog**\n${'''+env.common_changelog+'''}\n\n ~@ArrowOS") > /dev/null
+                    source '''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title '''+env.TG_TITLE+''' --text "Download it from [HERE](${TG_DOWN_URL}) [XDA]('''+env.xda_link+''')\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n'''+env.changelog+'''\n\n**Source Changelog**\n'''+env.common_changelog+'''\n\n ~@ArrowOS" > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "NOTIFIED UPDATE ON CHANNEL"
                     else
@@ -744,7 +744,7 @@ public def uploadNotify() {
                 # Tweet notify
                 if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
                     prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
-                    $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
+                    echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "POSTED ON TWITTER"
                     else
