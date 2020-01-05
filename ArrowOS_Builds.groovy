@@ -297,6 +297,17 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                             return
                         }
 
+                        if(whichDevice == "common_config") {
+                            env.repo_paths = configs.repo_paths.toString().trim()
+                            env.repo_clones = configs.repo_clones.toString().trim()
+                            env.repo_clones_paths = configs.repo_clones_paths.toString().trim()
+                            env.repopick_topics = configs.repopick_topics.toString().trim()
+                            env.repopick_changes = configs.repopick_changes.toString().trim()
+                            env.common_changelog = configs.changelog.toString().trim()
+
+                            return
+                        }
+
                         env.repo_paths = isDevOvr ? configs.ovr_repo_paths.toString().trim() : configs.repo_paths.toString().trim()
                         env.repo_clones = isDevOvr ? configs.ovr_repo_clones.toString().trim() : configs.repo_clones.toString().trim()
                         env.repo_clones_paths = isDevOvr ? configs.ovr_repo_clones_paths.toString().trim() : configs.repo_clones_paths.toString().trim()
@@ -308,10 +319,6 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                         env.buildtype = isDevOvr ? configs.ovr_buildtype.toString().trim() : configs.buildtype.toString().trim()
                         env.bootimage = isDevOvr ? configs.ovr_bootimage.toString().trim() : configs.bootimage
                         env.changelog = isDevOvr ? configs.ovr_changelog.toString().trim() : configs.changelog.toString().trim()
-
-                        if(whichDevice == "common_config") {
-                            env.common_changelog = configs.changelog.toString().trim()
-                        }
 
                         if(whichDevice != "common_config") {
                             env.lunch_override_name = configs.lunch_override_name.toString().trim()
