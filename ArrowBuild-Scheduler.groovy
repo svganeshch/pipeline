@@ -14,12 +14,25 @@ String getDeviceHal(device) {
     String gotHal = null
     officialDevicesUrl.eachLine {
         if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[0] == device) {
+            if(it.split(" ")[1] == device) {
                 gotHal = it.split(" ")[2]
             }
         }
     }
     return gotHal
+}
+
+@NonCPS
+Boolean isExplicitN3(def device) {
+    Boolean isN3 = false
+    officialDevicesUrl.eachLine {
+        if(it.charAt(0) != null && it.charAt(0) != "#") {
+            if(it.split(" ")[0] == "!") {
+                isN3 = true
+            }
+        }
+    }
+    return isN3
 }
 
 node("master") {
@@ -32,7 +45,14 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
                     String devHal = getDeviceHal(device)
+
                     for(i=1; i<=NO_OF_NODES; i++) {
+                        if(isExplicitN3(device)) {
+                            assign_node = "Arrow-3"
+                            echo "Explictly assigning ${assign_node} node for ${device}"
+                            break
+                        }
+
                         if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
                             assign_node = "Arrow-${i}"
                         }
