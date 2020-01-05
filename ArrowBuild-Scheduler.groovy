@@ -60,7 +60,7 @@ node("master") {
     
                     if(assign_node != null && !assign_node.isEmpty() && assign_node != "none") {
                         echo "Triggering build for ${device} on ${assign_node}"
-                        build job: 'ArrowOS_Builds', parameters: [
+                        build job: 'Arrow-Builder', parameters: [
                             string(name: 'DEVICE', value: device),
                             string(name: 'ASSIGNED_NODE', value: assign_node),
                             string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
