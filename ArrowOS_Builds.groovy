@@ -23,6 +23,7 @@ environment {
     def SOURCE_DIR
     def CCACHE_DIR
     def STALE_PATHS_FILE
+    def TG_VARS_FILE
 
     // device config holders
     def lunch_override_name
@@ -46,6 +47,15 @@ environment {
 
     // check holder
     def lunch_override
+
+    // tg notify args
+    def TG_DEVICE
+    def TG_BUILD_TYPE
+    def TG_BUILD_ZIP_TYPE
+    def TG_ARROW_VERSION
+    def TG_TITLE
+    def TG_DATE
+    def TG_HASHTAGS
 }
 
 if(!ASSIGNED_NODE.isEmpty()) {
@@ -60,6 +70,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
         env.CCACHE_DIR = env.MAIN_DISK + "/.ccache".toString().trim()
         env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
+        env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
 
         stage('Exporting vars') {
             sh  '''#!/bin/bash +x
@@ -77,6 +88,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     export SELINUX_IGNORE_NEVERALLOWS=true
                     export ALLOW_MISSING_DEPENDENCIES=true
                     export ARROW_OFFICIAL=true
+                    export ARROW_GAPPS=false
 
                     cd '''+env.SOURCE_DIR+'''
                 '''
@@ -372,7 +384,32 @@ public def deviceLunch() {
                 fi
             fi
 
+            >'''+TG_VARS_FILE+'''
+            echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+TG_VARS_FILE+'''
+            echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+TG_VARS_FILE+'''
+            echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+TG_VARS_FILE+'''
+            echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+TG_VARS_FILE+'''
+            echo TG_TITLE "Update $(get_build_var TARGET_DEVICE) ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+TG_VARS_FILE+'''
+            echo TG_DATE `date +'%d/%m/%Y'` >> '''+TG_VARS_FILE+'''
+            echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+TG_VARS_FILE+'''
+
         '''
+        env.TG_DEVICE = getTgVars("TG_DEVICE")
+        env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE")
+        env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE")
+        env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION")
+        env.TG_TITLE = getTgVars("TG_TITLE")
+        env.TG_DATE = getTgVars("TG_DATE")
+        env.TG_HASHTAGS = getTgVars("TG_HASHTAGS")
+}
+
+public def getTgVars(def tg_key) {
+    def tg_value = sh(returnStdout: true,
+                        script: '''#!/bin/bash
+                                    cat '''+env.TG_VARS_FILE+''' | grep '''+tg_key+''' | cut -d' ' -f 2-
+                                '''
+                    )
+    return tg_value.trim()
 }
 
 /*
