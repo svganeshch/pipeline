@@ -10,12 +10,12 @@ officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/android_vendor_a
 def activeDevices = active_devices.split(",");
 
 @NonCPS
-String getDeviceHal(device) {
+String getDeviceHal(def device) {
     String gotHal = null
     officialDevicesUrl.eachLine {
         if(it.charAt(0) != null && it.charAt(0) != "#") {
             if(it.split(" ")[1] == device) {
-                gotHal = it.split(" ")[2]
+                gotHal = it.split(" ")[3]
             }
         }
     }
@@ -23,11 +23,37 @@ String getDeviceHal(device) {
 }
 
 @NonCPS
+Boolean isExplicitN1(def device) {
+    Boolean isN1 = false
+    officialDevicesUrl.eachLine {
+        if(it.charAt(0) != null && it.charAt(0) != "#") {
+            if(it.split(" ")[0] == "\$" && it.split(" ")[1] == device) {
+                isN1 = true
+            }
+        }
+    }
+    return isN1
+}
+
+@NonCPS
+Boolean isExplicitN2(def device) {
+    Boolean isN2 = false
+    officialDevicesUrl.eachLine {
+        if(it.charAt(0) != null && it.charAt(0) != "#") {
+            if(it.split(" ")[0] == "@" && it.split(" ")[1] == device) {
+                isN2 = true
+            }
+        }
+    }
+    return isN2
+}
+
+@NonCPS
 Boolean isExplicitN3(def device) {
     Boolean isN3 = false
     officialDevicesUrl.eachLine {
         if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[0] == "!") {
+            if(it.split(" ")[0] == "!" && it.split(" ")[1] == device) {
                 isN3 = true
             }
         }
@@ -47,6 +73,18 @@ node("master") {
                     String devHal = getDeviceHal(device)
 
                     for(i=1; i<=NO_OF_NODES; i++) {
+                        if(isExplicitN1(device)) {
+                            assign_node = "Arrow-1"
+                            echo "Explictly assigning ${assign_node} node for ${device}"
+                            break
+                        }
+
+                        if(isExplicitN2(device)) {
+                            assign_node = "Arrow-2"
+                            echo "Explictly assigning ${assign_node} node for ${device}"
+                            break
+                        }
+
                         if(isExplicitN3(device)) {
                             assign_node = "Arrow-3"
                             echo "Explictly assigning ${assign_node} node for ${device}"
