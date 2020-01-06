@@ -434,14 +434,14 @@ public def deviceLunch(def is_gapps) {
         '''
 
         // Set holder vars
-        env.TG_DEVICE = getTgVars("TG_DEVICE")
-        env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE")
-        env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE")
-        env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION")
-        env.TG_TITLE = getTgVars("TG_TITLE")
-        env.TG_DATE = getTgVars("TG_DATE")
-        env.TG_HASHTAGS = getTgVars("TG_HASHTAGS")
-        env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR")
+        env.TG_DEVICE = getTgVars("TG_DEVICE").toString().trim()
+        env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE").toString().trim()
+        env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE").toString().trim()
+        env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION").toString().trim()
+        env.TG_TITLE = getTgVars("TG_TITLE").toString().trim()
+        env.TG_DATE = getTgVars("TG_DATE").toString().trim()
+        env.TG_HASHTAGS = getTgVars("TG_HASHTAGS").toString().trim()
+        env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR").toString().trim()
 }
 
 public def getTgVars(def tg_key) {
@@ -708,8 +708,9 @@ public def uploadNotify() {
                         echo "-----------------------------------------------"
                         echo "Generating ota json"
                         echo "-----------------------------------------------"
+                        export BUILD_OUT_DIR='''+env.BUILD_OUT_DIR+'''
                         if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then 
-                            export '''+env.TG_BUILD_ZIP_TYPE+'''
+                            export TG_ZIP_TYPE='''+env.TG_BUILD_ZIP_TYPE+'''
                         fi
                         python genOTA.py > /dev/null
                         if [ $? -eq 0 ]; then
@@ -731,20 +732,10 @@ public def uploadNotify() {
                     fi
                 fi
 
-                # Telegram notify
-                if [ $notify -eq 0 ]; then
-                    source '''+env.NOTIFY_REPO_DIR+'''/telegram-notify --silent --title '''+env.TG_TITLE+''' --text "Download it from [HERE](${TG_DOWN_URL}) [XDA]('''+env.xda_link+''')\n**For additional information check:**\n [Website](https://arrowos.net/) | [Blog](https://blog.arrowos.net/) | [Gerrit](https://review.arrowos.net/#/q/status:merged/)\n\n**Device Changelog:**\n'''+env.changelog+'''\n\n**Source Changelog**\n'''+env.common_changelog+'''\n\n ~@ArrowOS" > /dev/null
-                    if [ $? -eq 0 ]; then
-                        echo "NOTIFIED UPDATE ON CHANNEL"
-                    else
-                        echo "FAILED TO NOTIFY ON CHANNEL"
-                    fi
-                fi
-
                 # Tweet notify
                 if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
                     prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
-                    echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post > /dev/null
+                    $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "POSTED ON TWITTER"
                     else
@@ -757,7 +748,25 @@ public def uploadNotify() {
                 exit 1
             fi
 
+            if [ $notify -eq 0 ]; then
+                echo TG_NOTIFY yes >> '''+TG_VARS_FILE+'''
+                echo TG_DOWN_URL $TG_DOWN_URL >> '''+TG_VARS_FILE+'''
+            fi
+
         '''
+        is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
+        tg_down_url = getTgVars("TG_DOWN_URL").toString().trim()
+
+        if(is_tgnotify == "yes") {
+            build job: 'tg_notify', parameters: [
+                string(name: 'is_test', value: env.test_build),
+                string(name: 'TG_TITLE', value: env.TG_TITLE),
+                string(name: 'TG_DOWN_URL', value: tg_down_url),
+                string(name: 'TG_XDA_LINK', value: env.xda_link),
+                string(name: 'TG_DEV_CHANGELOG', value: env.changelog),
+                string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
+            ], propagate: false, wait: false
+        }
 }
 
 // Set build description as executed at end
