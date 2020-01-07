@@ -112,7 +112,7 @@ node("master") {
                 }
 
                 // Node 3
-                if(node3_devices != null && node3_devices.length !=0) {
+                if(node3_devices != null && !node3_devices.isEmpty()) {
                     echo "-------------------------------"
                     echo "Devices assigned for Arrow-3"
                     echo "-------------------------------"
@@ -130,7 +130,7 @@ node("master") {
                 }
 
                 // Node 2
-                if(node2_devices != null && node2_devices.length !=0) {
+                if(node2_devices != null && !node2_devices.isEmpty()) {
                     echo "-------------------------------"
                     echo "Devices assigned for Arrow-2"
                     echo "-------------------------------"
@@ -148,7 +148,7 @@ node("master") {
                 }
 
                 // Node 1
-                if(node1_devices != null && node1_devices.length !=0) {
+                if(node1_devices != null && !node1_devices.isEmpty()) {
                     echo "-------------------------------"
                     echo "Devices assigned for Arrow-1"
                     echo "-------------------------------"
