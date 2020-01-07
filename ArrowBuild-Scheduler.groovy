@@ -111,51 +111,57 @@ node("master") {
                     }
                 }
 
-                // Node 1
-                echo "-------------------------------"
-                echo "Devices assigned for Arrow-1"
-                echo "-------------------------------"
-                for(n1dev in node1_devices) {
-                    if(n1dev != null && !n1dev.isEmpty() && n1dev != "none") {
-                        echo "Triggering build for ${n1dev}"
-                        build job: 'Arrow-Builder', parameters: [
-                            string(name: 'DEVICE', value: n1dev),
-                            string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
-                            string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
-                        ], propagate: false, wait: false
-                        sleep 2
+                // Node 3
+                if(node3_devices != null && node3_devices.length !=0) {
+                    echo "-------------------------------"
+                    echo "Devices assigned for Arrow-3"
+                    echo "-------------------------------"
+                    for(n3dev in node3_devices) {
+                        if(n3dev != null && !n3dev.isEmpty() && n3dev != "none") {
+                            echo "Triggering build for ${n3dev}"
+                            build job: 'Arrow-Builder', parameters: [
+                                string(name: 'DEVICE', value: n3dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                            ], propagate: false, wait: false
+                            sleep 2
+                        }
                     }
                 }
 
                 // Node 2
-                echo "-------------------------------"
-                echo "Devices assigned for Arrow-2"
-                echo "-------------------------------"
-                for(n2dev in node2_devices) {
-                    if(n2dev != null && !n2dev.isEmpty() && n2dev != "none") {
-                        echo "Triggering build for ${n2dev}"
-                        build job: 'Arrow-Builder', parameters: [
-                            string(name: 'DEVICE', value: n2dev),
-                            string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
-                            string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
-                        ], propagate: false, wait: false
-                        sleep 2
+                if(node2_devices != null && node2_devices.length !=0) {
+                    echo "-------------------------------"
+                    echo "Devices assigned for Arrow-2"
+                    echo "-------------------------------"
+                    for(n2dev in node2_devices) {
+                        if(n2dev != null && !n2dev.isEmpty() && n2dev != "none") {
+                            echo "Triggering build for ${n2dev}"
+                            build job: 'Arrow-Builder', parameters: [
+                                string(name: 'DEVICE', value: n2dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                            ], propagate: false, wait: false
+                            sleep 2
+                        }
                     }
                 }
 
-                // Node 3
-                echo "-------------------------------"
-                echo "Devices assigned for Arrow-3"
-                echo "-------------------------------"
-                for(n3dev in node3_devices) {
-                    if(n3dev != null && !n3dev.isEmpty() && n3dev != "none") {
-                        echo "Triggering build for ${n3dev}"
-                        build job: 'Arrow-Builder', parameters: [
-                            string(name: 'DEVICE', value: n3dev),
-                            string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
-                            string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
-                        ], propagate: false, wait: false
-                        sleep 2
+                // Node 1
+                if(node1_devices != null && node1_devices.length !=0) {
+                    echo "-------------------------------"
+                    echo "Devices assigned for Arrow-1"
+                    echo "-------------------------------"
+                    for(n1dev in node1_devices) {
+                        if(n1dev != null && !n1dev.isEmpty() && n1dev != "none") {
+                            echo "Triggering build for ${n1dev}"
+                            build job: 'Arrow-Builder', parameters: [
+                                string(name: 'DEVICE', value: n1dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                            ], propagate: false, wait: false
+                            sleep 2
+                        }
                     }
                 }
             } else {
