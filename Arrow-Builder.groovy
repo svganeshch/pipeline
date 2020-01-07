@@ -250,6 +250,10 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 uploadNotify()
             }
         }
+
+        if(checkTGplugin()) {
+            telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
+        }
     }
 }
 
@@ -755,10 +759,6 @@ public def uploadNotify() {
                 string(name: 'TG_DEV_CHANGELOG', value: env.changelog),
                 string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
             ], propagate: false, wait: false
-        }
-
-        if(checkTGplugin()) {
-            telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
         }
 }
 
