@@ -760,6 +760,7 @@ public def uploadNotify() {
 
 // Set build description as executed at end
 currentBuild.description = "Executed @ ${ASSIGNED_NODE}"
+currentBuild.result = "SUCCESS"
 
 if(checkTGplugin()) {
     telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
