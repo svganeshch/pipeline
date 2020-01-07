@@ -443,7 +443,7 @@ public def deviceLunch(def is_gapps) {
 public def getTgVars(def tg_key) {
     def tg_value = sh(returnStdout: true,
                         script: '''#!/bin/bash
-                                    cat '''+env.TG_VARS_FILE+''' | grep '''+tg_key+''' | cut -d' ' -f 2-
+                                    cat '''+env.TG_VARS_FILE+''' | grep -w '''+tg_key+''' | cut -d' ' -f 2-
                                 '''
                     )
     return tg_value.trim()
@@ -756,12 +756,12 @@ public def uploadNotify() {
                 string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
             ], propagate: false, wait: false
         }
+
+        if(checkTGplugin()) {
+            telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
+        }
 }
 
 // Set build description as executed at end
 currentBuild.description = "Executed @ ${ASSIGNED_NODE}"
 currentBuild.result = "SUCCESS"
-
-if(checkTGplugin()) {
-    telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
-}
