@@ -21,8 +21,6 @@ currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 environment {
     def MAIN_DISK
     def SOURCE_DIR
-    def OTA_DIR
-    def OTA_REPO_URL
     def CCACHE_DIR
     def STALE_PATHS_FILE
     def TG_VARS_FILE
@@ -74,8 +72,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
-        env.OTA_DIR = env.MAIN_DISK + "/arrow_ota".toString().trim()
-        env.OTA_REPO_URL = "git@github.com:ArrowOS/arrow_ota.git"
         env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
         env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
         env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
@@ -421,15 +417,15 @@ public def deviceLunch(def is_gapps) {
                 fi
             fi
 
-            >'''+TG_VARS_FILE+'''
-            echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+TG_VARS_FILE+'''
-            echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+TG_VARS_FILE+'''
-            echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+TG_VARS_FILE+'''
-            echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+TG_VARS_FILE+'''
-            echo TG_TITLE "Update $(get_build_var TARGET_DEVICE) ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+TG_VARS_FILE+'''
-            echo TG_DATE `date +'%d/%m/%Y'` >> '''+TG_VARS_FILE+'''
-            echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+TG_VARS_FILE+'''
-            echo BUILD_OUT_DIR $OUT >> '''+TG_VARS_FILE+'''
+            >'''+env.TG_VARS_FILE+'''
+            echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+env.TG_VARS_FILE+'''
+            echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
+            echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+env.TG_VARS_FILE+'''
+            echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+env.TG_VARS_FILE+'''
+            echo TG_TITLE "Update $(get_build_var TARGET_DEVICE) ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+env.TG_VARS_FILE+'''
+            echo TG_DATE `date +'%d/%m/%Y'` >> '''+env.TG_VARS_FILE+'''
+            echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+env.TG_VARS_FILE+'''
+            echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
 
         '''
 
@@ -670,8 +666,6 @@ public def uploadNotify() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    export test_notify=0
-
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/EXPERIMENTS/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
@@ -682,8 +676,6 @@ public def uploadNotify() {
                     fi
                     TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
                 else
-                    export test_notify=1
-
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/arrow-10.0/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO SF SERVERS"
@@ -695,34 +687,11 @@ public def uploadNotify() {
                     TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
 
                     # Generate OTA
-                    if [ '''+env.bootimage+''' = "no" ] && [ $notify -eq 0 ]; then
-                        # Clone ota repo if it doesn't exist
-                        if [ ! -d '''+env.OTA_DIR+''' ]; then
-                            git clone '''+env.OTA_REPO_URL+''' '''+env.OTA_DIR+'''
-                        fi
-
-                        cd '''+env.OTA_DIR+'''
-                        git reset --hard
-                        git pull -f origin master
-                        git checkout master
-                        echo "-----------------------------------------------"
-                        echo "Generating ota json"
-                        echo "-----------------------------------------------"
-                        export BUILD_OUT_DIR='''+env.BUILD_OUT_DIR+'''
-                        if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then 
-                            export TG_ZIP_TYPE='''+env.TG_BUILD_ZIP_TYPE+'''
-                        fi
-                        python genOTA.py > /dev/null
-                        if [ $? -eq 0 ]; then
-                            git add *.json
-                            git commit -m "['''+env.TG_DEVICE+''']: otagen for $BUILD_ARTIFACT ['''+env.TG_BUILD_ZIP_TYPE+''']"
-                            git push origin master
-                        else
-                            echo "Failed to push otagen for '''+env.TG_DEVICE+''' [$BUILD_ARTIFACT] ['''+env.TG_BUILD_ZIP_TYPE+''']"
-                        fi
-                        echo ""
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    fi
+                    buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
+                    buildsize=$(ls -l $TO_UPLOAD | awk '{print $5}')
+                    echo BUILD_ARTIFACT $BUILD_ARTIFACT >> '''+env.TG_VARS_FILE+'''
+                    echo BUILD_ARTIFACT_SHA256 $buildsha256 >> '''+env.TG_VARS_FILE+'''
+                    echo BUILD_ARTIFACT_SIZE $buildsize >> '''+env.TG_VARS_FILE+'''
                 fi
 
                 # Check for our notify repo dir
@@ -749,15 +718,35 @@ public def uploadNotify() {
             fi
 
             if [ $notify -eq 0 ]; then
-                echo TG_NOTIFY yes >> '''+TG_VARS_FILE+'''
-                echo TG_DOWN_URL $TG_DOWN_URL >> '''+TG_VARS_FILE+'''
+                echo TG_NOTIFY yes >> '''+env.TG_VARS_FILE+'''
+                echo TG_DOWN_URL $TG_DOWN_URL >> '''+env.TG_VARS_FILE+'''
             fi
 
         '''
         is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
         tg_down_url = getTgVars("TG_DOWN_URL").toString().trim()
+        build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
+        build_artifact_sha256 = getTgVars("BUILD_ARTIFACT_SHA256").toString().trim()
+        build_artifact_size = getTgVars("BUILD_ARTIFACT_SIZE").toString().trim()
+
+        // GenOTA
+        if(is_tgnotify == "yes" && env.bootimage == "no" && env.test_build == "no") {
+            echo "-----------------------------------------------"
+            echo "Generating ota json"
+            echo "-----------------------------------------------"
+            build job: 'genOTA', parameters: [
+                string(name: 'TG_DEVICE', value: env.TG_DEVICE),
+                string(name: 'BUILD_ARTIFACT', value: build_artifact),
+                string(name: 'BUILD_ARTIFACT_SHA256', value: build_artifact_sha256),
+                string(name: 'BUILD_ARTIFACT_SIZE', value: build_artifact_size),
+                string(name: 'TG_BUILD_ZIP_TYPE', value: env.TG_BUILD_ZIP_TYPE)
+            ], propagate: false, wait: false
+        }
 
         if(is_tgnotify == "yes") {
+            echo "-----------------------------------------------"
+            echo "Notifying on tg"
+            echo "-----------------------------------------------"
             build job: 'tg_notify', parameters: [
                 string(name: 'is_test', value: env.test_build),
                 string(name: 'TG_TITLE', value: env.TG_TITLE),
