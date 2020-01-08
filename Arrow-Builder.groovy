@@ -678,7 +678,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/arrow-10.0/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
@@ -688,7 +688,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO SF SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
