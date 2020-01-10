@@ -193,7 +193,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "Doing installclean"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    mka installclean
                 '''
         }
 
