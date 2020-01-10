@@ -383,7 +383,6 @@ public def deviceLunch(def is_gapps) {
             fi
 
             if [ '''+is_gapps+''' = "yes" ]; then
-                mka installclean
                 export ARROW_GAPPS=true
             else
                 export ARROW_GAPPS=false
@@ -594,8 +593,9 @@ public def deviceCompile() {
             export SELINUX_IGNORE_NEVERALLOWS=true
             export ALLOW_MISSING_DEPENDENCIES=true
             export ARROW_OFFICIAL=true
-
-            if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then 
+            
+            if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then
+                mka installclean
                 export ARROW_GAPPS=true
             else
                 export ARROW_GAPPS=false
