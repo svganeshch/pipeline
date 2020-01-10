@@ -595,7 +595,6 @@ public def deviceCompile() {
             export ARROW_OFFICIAL=true
             
             if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then
-                mka installclean
                 export ARROW_GAPPS=true
             else
                 export ARROW_GAPPS=false
@@ -643,6 +642,7 @@ public def deviceCompile() {
             if [ '''+env.bootimage+''' = "yes" ]; then
                 mka bootimage
             else
+                mka installclean
                 mka bacon
             fi
         '''
