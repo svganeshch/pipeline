@@ -129,7 +129,8 @@ node("master") {
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n7dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-7"),
-                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
+                                string(name: 'VERSION', value: version)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -147,7 +148,8 @@ node("master") {
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n3dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
-                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
+                                string(name: 'VERSION', value: version)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -165,7 +167,8 @@ node("master") {
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n2dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
-                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
+                                string(name: 'VERSION', value: version)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -183,7 +186,8 @@ node("master") {
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n1dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
-                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
+                                string(name: 'VERSION', value: version)
                             ], propagate: false, wait: false
                             sleep 2
                         }
