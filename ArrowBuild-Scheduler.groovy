@@ -12,6 +12,7 @@ def activeDevices = active_devices.split(",");
 def node1_devices = []
 def node2_devices = []
 def node3_devices = []
+def node7_devices = []
 
 @NonCPS
 String getDeviceHal(def device) {
@@ -74,6 +75,12 @@ node("master") {
             if(activeDevices != null && activeDevices.length !=0 && activeDevices[0] != "none") {
                 for(device in activeDevices) {
                     String assign_node = null
+                    if(!version.isEmpty()) {
+                        if(version == "arrow-pie") {
+                            node7_devices.add(device)
+                            continue
+                        }
+                    }
                     String devHal = getDeviceHal(device)
 
                     for(i=1; i<=NO_OF_NODES; i++) {
@@ -108,6 +115,24 @@ node("master") {
                         node3_devices.add(device)
                     } else {
                         echo "No node assigned for ${device}"
+                    }
+                }
+                
+                // Node 7 (PIE)
+                if(node7_devices != null && !node7_devices.isEmpty()) {
+                    echo "-------------------------------"
+                    echo "Devices assigned for Arrow-7 (PIE)"
+                    echo "-------------------------------"
+                    for(n7dev in node7_devices) {
+                        if(n7dev != null && !n7dev.isEmpty() && n7dev != "none") {
+                            echo "Triggering build for ${n7dev}"
+                            build job: 'Arrow-Builder', parameters: [
+                                string(name: 'DEVICE', value: n7dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-7"),
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp())
+                            ], propagate: false, wait: false
+                            sleep 2
+                        }
                     }
                 }
 
