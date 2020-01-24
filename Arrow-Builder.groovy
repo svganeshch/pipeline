@@ -227,26 +227,28 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         // Gapps build stage
-        stage("Gapps build") {
-            sh  '''#!/bin/bash
+        if(VERSION != "arrow-pie") {
+            stage("Gapps build") {
+                sh  '''#!/bin/bash
 
-                    if [ ! -d '''+env.SOURCE_DIR+'''/vendor/gapps ]; then
-                        echo "GApps vendor directory not found!"
-                        exit 1
-                    fi
-                '''
+                        if [ ! -d '''+env.SOURCE_DIR+'''/vendor/gapps ]; then
+                            echo "GApps vendor directory not found!"
+                            exit 1
+                        fi
+                    '''
 
-            stage("Device lunch") {
-                def is_gapps="yes"
-                deviceLunch(is_gapps)
-            }
+                stage("Device lunch") {
+                    def is_gapps="yes"
+                    deviceLunch(is_gapps)
+                }
 
-            stage("Compiling") {
-                deviceCompile()
-            }
+                stage("Compiling") {
+                    deviceCompile()
+                }
 
-            stage("Upload & Notify") {
-                uploadNotify()
+                stage("Upload & Notify") {
+                    uploadNotify()
+                }
             }
         }
 
