@@ -143,7 +143,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 sh  '''#!/bin/bash
                         cd '''+env.SOURCE_DIR+'''
                         rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                        repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-10.0 --depth=1 > /dev/null
+                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
                         repo sync --force-sync --no-tags --no-clone-bundle -c -j4
                         if [ $? -ne 0 ]; then
                             exit 1
@@ -227,7 +227,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         // Gapps build stage
-        if(VERSION != "arrow-pie") {
+        if(VERSION != "arrow-9.x") {
             stage("Gapps build") {
                 sh  '''#!/bin/bash
 
@@ -681,7 +681,7 @@ public def uploadNotify() {
                     fi
                     TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                 else
-                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/arrow-10.0/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO SF SERVERS"
                         notify=0
@@ -689,7 +689,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO SF SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
@@ -708,7 +708,7 @@ public def uploadNotify() {
 
                 # Tweet notify
                 if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
-                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/arrow-10.0/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
+                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
                     $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "POSTED ON TWITTER"

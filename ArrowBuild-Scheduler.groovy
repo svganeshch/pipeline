@@ -76,7 +76,7 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
                     if(!version.isEmpty()) {
-                        if(version == "arrow-pie") {
+                        if(version == "arrow-9.x") {
                             node7_devices.add(device)
                             continue
                         }
