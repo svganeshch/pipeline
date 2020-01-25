@@ -52,6 +52,7 @@ environment {
     def lunch_override
 
     // tg notify args
+    def TG_ARROW_ZIP
     def TG_DEVICE
     def TG_BUILD_TYPE
     def TG_BUILD_ZIP_TYPE
@@ -422,6 +423,7 @@ public def deviceLunch(def is_gapps) {
             fi
 
             >'''+env.TG_VARS_FILE+'''
+            echo TG_ARROW_ZIP $(get_build_var ARROW_VERSION).zip >> '''+env.TG_VARS_FILE+'''
             echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+env.TG_VARS_FILE+'''
@@ -434,6 +436,7 @@ public def deviceLunch(def is_gapps) {
         '''
 
         // Set holder vars
+        env.TG_ARROW_ZIP = getTgVars("TG_ARROW_ZIP").toString().trim()
         env.TG_DEVICE = getTgVars("TG_DEVICE").toString().trim()
         env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE").toString().trim()
         env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE").toString().trim()
@@ -665,7 +668,7 @@ public def uploadNotify() {
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             else
                 cd '''+env.BUILD_OUT_DIR+'''
-                BUILD_ARTIFACT=$(echo ls -t Arrow-$(echo '''+TG_ARROW_VERSION+''' | cut -d 'v' -f 2)-*-.zip | head -1)
+                BUILD_ARTIFACT='''+env.TG_ARROW_ZIP'''
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             fi
 
