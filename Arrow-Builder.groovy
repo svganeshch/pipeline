@@ -665,7 +665,7 @@ public def uploadNotify() {
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             else
                 cd '''+env.BUILD_OUT_DIR+'''
-                BUILD_ARTIFACT=$(ls -t Arrow-v10.0-*-'''+env.TG_BUILD_ZIP_TYPE+'''.zip | head -1)
+                BUILD_ARTIFACT=$(ls -t '''+VERSION+'''-*-'''+env.TG_BUILD_ZIP_TYPE+'''.zip | head -1)
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             fi
 
