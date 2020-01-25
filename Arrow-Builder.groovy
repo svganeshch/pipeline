@@ -663,12 +663,10 @@ public def uploadNotify() {
             
             cd '''+env.SOURCE_DIR+'''
             if [ '''+env.bootimage+''' = "yes" ]; then
-                cd '''+env.BUILD_OUT_DIR+'''
                 BUILD_ARTIFACT=$(ls -t boot.img | head -1)
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             else
-                cd '''+env.BUILD_OUT_DIR+'''
-                BUILD_ARTIFACT='''+env.TG_ARROW_ZIP'''
+                BUILD_ARTIFACT='''+env.TG_ARROW_ZIP+'''
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             fi
 
