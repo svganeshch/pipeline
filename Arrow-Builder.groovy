@@ -267,7 +267,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
 @NonCPS
 public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobalOvr) {
     try {
-        def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs',
+        def which_db = VERSION
+        def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
             'root', 'abansode', 'com.mysql.jdbc.Driver')
 
         def md = dbcon.connection.metaData
