@@ -594,7 +594,11 @@ public def deviceCompile() {
             export LOCALVERSION=-Arrow
 
             # Rom exports
-            export SELINUX_IGNORE_NEVERALLOWS=true
+            if [ '''+env.buildtype+''' = "user" ]; then
+                export SELINUX_IGNORE_NEVERALLOWS_ON_USER=true
+            else
+                export SELINUX_IGNORE_NEVERALLOWS=true
+            fi
             export ALLOW_MISSING_DEPENDENCIES=true
             export ARROW_OFFICIAL=true
             
