@@ -15,7 +15,7 @@ public Boolean checkTGplugin() {
     }
 }
 
-currentBuild.displayName = "${DEVICE}"
+currentBuild.displayName = "${DEVICE} (${VERSION})"
 currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 
 environment {
