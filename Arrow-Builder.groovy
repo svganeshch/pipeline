@@ -755,7 +755,7 @@ public def uploadNotify() {
             ], propagate: false, wait: false
         }
 
-        if(is_tgnotify == "yes") {
+        if(is_tgnotify == "yes" && env.bootimage != "yes") {
             echo "-----------------------------------------------"
             echo "Notifying on tg"
             echo "-----------------------------------------------"
@@ -766,6 +766,16 @@ public def uploadNotify() {
                 string(name: 'TG_XDA_LINK', value: env.xda_link),
                 string(name: 'TG_DEV_CHANGELOG', value: env.changelog),
                 string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
+            ], propagate: false, wait: false
+        } elseif(is_tgnotify == "yes" && env.bootimage == "yes") {
+            echo "-----------------------------------------------"
+            echo "Notifying on tg"
+            echo "-----------------------------------------------"
+            build job: 'tg_notify', parameters: [
+                string(name: 'is_test', value: env.test_build),
+                string(name: 'TG_TITLE', value: DEVICE + " (bootimage)"),
+                string(name: 'TG_DOWN_URL', value: tg_down_url),
+                string(name: 'TG_DEV_CHANGELOG', value: env.changelog)
             ], propagate: false, wait: false
         }
 }
