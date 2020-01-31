@@ -228,7 +228,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         // Gapps build stage
-        if(VERSION != "arrow-9.x") {
+        if(VERSION != "arrow-9.x" && env.bootimage != "yes") {
             stage("Gapps build") {
                 sh  '''#!/bin/bash
 
@@ -668,6 +668,7 @@ public def uploadNotify() {
             
             cd '''+env.SOURCE_DIR+'''
             if [ '''+env.bootimage+''' = "yes" ]; then
+                cd '''+env.BUILD_OUT_DIR+'''
                 BUILD_ARTIFACT=$(ls -t boot.img | head -1)
                 TO_UPLOAD='''+env.BUILD_OUT_DIR+'''/$BUILD_ARTIFACT
             else
