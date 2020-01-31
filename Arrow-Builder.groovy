@@ -767,7 +767,7 @@ public def uploadNotify() {
                 string(name: 'TG_DEV_CHANGELOG', value: env.changelog),
                 string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
             ], propagate: false, wait: false
-        } elseif(is_tgnotify == "yes" && env.bootimage == "yes") {
+        } else if(is_tgnotify == "yes" && env.bootimage == "yes") {
             echo "-----------------------------------------------"
             echo "Notifying on tg"
             echo "-----------------------------------------------"
