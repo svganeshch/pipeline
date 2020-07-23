@@ -678,7 +678,7 @@ public def uploadNotify() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/EXPERIMENTS/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-experiments/'''+env.TG_DEVICE+'''/'''+VERSION+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
                         notify=0
@@ -686,7 +686,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/EXPERIMENTS/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
