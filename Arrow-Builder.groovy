@@ -751,6 +751,7 @@ public def uploadNotify() {
             echo "-----------------------------------------------"
             build job: 'genOTA', parameters: [
                 string(name: 'TG_DEVICE', value: env.TG_DEVICE),
+                string(name: 'TG_DEVICE_CHANGELOG', value: env.changelog),
                 string(name: 'TG_DEVICE_OEM', value: env.TG_DEVICE_OEM),
                 string(name: 'BUILD_ARTIFACT', value: build_artifact),
                 string(name: 'BUILD_ARTIFACT_SHA256', value: build_artifact_sha256),
