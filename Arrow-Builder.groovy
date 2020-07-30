@@ -54,6 +54,7 @@ environment {
     // tg notify args
     def TG_ARROW_ZIP
     def TG_DEVICE
+    def TG_DEVICE_OEM
     def TG_BUILD_TYPE
     def TG_BUILD_ZIP_TYPE
     def TG_ARROW_VERSION
@@ -426,6 +427,7 @@ public def deviceLunch(def is_gapps) {
             >'''+env.TG_VARS_FILE+'''
             echo TG_ARROW_ZIP $(get_build_var ARROW_VERSION).zip >> '''+env.TG_VARS_FILE+'''
             echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+env.TG_VARS_FILE+'''
+            echo TG_DEVICE_OEM $(get_build_var PRODUCT_BRAND) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+env.TG_VARS_FILE+'''
@@ -439,6 +441,7 @@ public def deviceLunch(def is_gapps) {
         // Set holder vars
         env.TG_ARROW_ZIP = getTgVars("TG_ARROW_ZIP").toString().trim()
         env.TG_DEVICE = getTgVars("TG_DEVICE").toString().trim()
+        env.TG_DEVICE_OEM = getTgVars("TG_DEVICE_OEM").toString().trim()
         env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE").toString().trim()
         env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE").toString().trim()
         env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION").toString().trim()
@@ -748,6 +751,7 @@ public def uploadNotify() {
             echo "-----------------------------------------------"
             build job: 'genOTA', parameters: [
                 string(name: 'TG_DEVICE', value: env.TG_DEVICE),
+                string(name: 'TG_DEVICE_OEM', value: env.TG_DEVICE_OEM),
                 string(name: 'BUILD_ARTIFACT', value: build_artifact),
                 string(name: 'BUILD_ARTIFACT_SHA256', value: build_artifact_sha256),
                 string(name: 'BUILD_ARTIFACT_SIZE', value: build_artifact_size),
