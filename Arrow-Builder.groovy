@@ -777,8 +777,7 @@ public def uploadNotify() {
                 string(name: 'TG_TITLE', value: env.TG_TITLE),
                 string(name: 'TG_DOWN_URL', value: tg_down_url),
                 string(name: 'TG_XDA_LINK', value: env.xda_link),
-                string(name: 'TG_DEV_CHANGELOG', value: 'https://arrowos.net/download.php'),
-                string(name: 'TG_COM_CHANGELOG', value: env.common_changelog)
+                string(name: 'TG_DEV_CHANGELOG', value: 'https://arrowos.net/download.php')
             ], propagate: false, wait: false
         } else if(is_tgnotify == "yes" && env.bootimage == "yes") {
             echo "-----------------------------------------------"
