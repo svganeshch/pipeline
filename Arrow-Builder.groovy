@@ -429,7 +429,7 @@ public def deviceLunch(def is_gapps) {
             >'''+env.TG_VARS_FILE+'''
             echo TG_ARROW_ZIP $(get_build_var ARROW_VERSION).zip >> '''+env.TG_VARS_FILE+'''
             echo TG_DEVICE $(get_build_var TARGET_DEVICE) >> '''+env.TG_VARS_FILE+'''
-            echo TG_DEVICE_MAINTAINER $(get_build_var DEVICE_MAINTAINER).zip >> '''+env.TG_VARS_FILE+'''
+            echo TG_DEVICE_MAINTAINER $(get_build_var DEVICE_MAINTAINER) >> '''+env.TG_VARS_FILE+'''
             echo TG_DEVICE_MODEL $(get_build_var PRODUCT_MODEL) >> '''+env.TG_VARS_FILE+'''
             echo TG_DEVICE_OEM $(get_build_var PRODUCT_BRAND) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
