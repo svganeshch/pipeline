@@ -695,7 +695,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
+                    TG_DOWN_URL="https://arrowos.net/download.php"
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
@@ -705,7 +705,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO SF SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrow-os/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
+                    TG_DOWN_URL="https://arrowos.net/download.php"
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
@@ -724,7 +724,7 @@ public def uploadNotify() {
 
                 # Tweet notify
                 if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
-                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://sourceforge.net/projects/arrow-os/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''\n\n~@arrow_os"
+                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://arrowos.net/download.php\n\n~@arrow_os"
                     $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
                     if [ $? -eq 0 ]; then
                         echo "POSTED ON TWITTER"
