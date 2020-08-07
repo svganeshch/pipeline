@@ -695,7 +695,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://arrowos.net/download.php"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
