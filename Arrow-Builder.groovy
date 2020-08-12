@@ -407,7 +407,7 @@ public def deviceLunch() {
             echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+env.TG_VARS_FILE+'''
-            echo TG_TITLE "Update $(get_build_var TARGET_DEVICE) ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+env.TG_VARS_FILE+'''
+            echo TG_TITLE "New $(get_build_var TARGET_DEVICE) build ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+env.TG_VARS_FILE+'''
             echo TG_DATE `date +'%d/%m/%Y'` >> '''+env.TG_VARS_FILE+'''
             echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+env.TG_VARS_FILE+'''
             echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
