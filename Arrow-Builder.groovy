@@ -26,6 +26,9 @@ environment {
     def TG_VARS_FILE
     def NOTIFY_REPO_DIR
     def NOTIFY_REPO_URL
+    def GAPPS_REPO_URL
+    def GAPPS_REPO_BRANCH
+    def GAPPS_DIR
 
     // device config holders
     def repo_paths
@@ -77,6 +80,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
         env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
         env.NOTIFY_REPO_DIR = env.MAIN_DISK + "/arrow_notify"
         env.NOTIFY_REPO_URL = "git@github.com:ArrowOS/arrow_notify.git"
+        env.GAPPS_REPO_URL = "git@gitlab.com:ArrowOS/android_vendor_gapps.git"
+        env.GAPPS_REPO_BRANCH = "arrow-10.0-2.0"
+        env.GAPPS_DIR = env.SOURCE_DIR + "/vendor/gapps".toString().trim()
 
         stage('Fetching configs from DB') {
             echo "Establishing connection to configs DB...!"
@@ -381,6 +387,12 @@ public def deviceLunch() {
                     export ARROW_GAPPS=false
                 elif [ '''+env.buildvariant+''' = "gapps" ]; then
                     export ARROW_GAPPS=true
+
+                    if [ -d '''+env.GAPPS_DIR+''' ]; then
+                        rm -rf '''+env.GAPPS_DIR+'''
+                    fi
+                    
+                    git clone '''+env.GAPPS_REPO_URL+''' -b '''+env.GAPPS_REPO_BRANCH+''' '''+env.GAPPS_DIR+''' --depth=1
                 else
                     export ARROW_GAPPS=false
                 fi    
