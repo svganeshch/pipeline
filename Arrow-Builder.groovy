@@ -39,6 +39,7 @@ environment {
     def test_build
     def is_official
     def buildtype
+    def buildvariant
     def bootimage
     def changelog
     def common_changelog
@@ -196,8 +197,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage('Device lunch') {
-            def is_gapps="no"
-            deviceLunch(is_gapps)
+            deviceLunch()
         }
 
         stage('Parsing configs data') {
@@ -226,7 +226,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         // Gapps build stage
-        if(VERSION != "arrow-9.x" && env.bootimage != "yes") {
+        if(VERSION != "arrow-9.x" && env.bootimage != "yes" && env.buildvariant == "both") {
             stage("Gapps build") {
                 sh  '''#!/bin/bash
 
@@ -237,8 +237,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     '''
 
                 stage("Device lunch") {
-                    def is_gapps="yes"
-                    deviceLunch(is_gapps)
+                    env.buildvariant = "gapps"
+                    deviceLunch()
                 }
 
                 stage("Compiling") {
@@ -289,6 +289,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
                                 env.is_official = configs.is_official.toString().trim()
                                 env.bootimage = configs.bootimage.toString().trim()
                                 env.buildtype = configs.buildtype.toString().trim()
+                                env.buildvariant = configs.buildvariant.toString().trim()
                                 env.default_buildtype_state = configs.default_buildtype_state.toString().trim()
 
                                 if(env.default_buildtype_state == "yes") {
@@ -320,6 +321,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
                         env.test_build = configs.test_build.toString().trim()
                         env.is_official = configs.is_official.toString().trim()
                         env.buildtype = configs.buildtype.toString().trim()
+                        env.buildvariant = configs.buildvariant.toString().trim()
                         env.bootimage = configs.bootimage
                         env.changelog = configs.changelog.toString().trim()
 
@@ -359,7 +361,7 @@ public def fetchConfigs(def DEVICE) {
     Device lunch stage
 ---------------------------------------------------
 */
-public def deviceLunch(def is_gapps) {
+public def deviceLunch() {
     sh  '''#!/bin/bash
 
             cd '''+env.SOURCE_DIR+'''
@@ -371,10 +373,14 @@ public def deviceLunch(def is_gapps) {
                 unset ARROW_OFFICIAL
             fi
 
-            if [ '''+is_gapps+''' = "yes" ]; then
-                export ARROW_GAPPS=true
-            else
-                export ARROW_GAPPS=false
+            if [ ! -z '''+env.buildvariant+''' ]; then
+                if [ '''+env.buildvariant+''' = "vanilla" ]; then
+                    export ARROW_GAPPS=false
+                elif [ '''+env.buildvariant+''' = "gapps" ]; then
+                    export ARROW_GAPPS=true
+                else
+                    export ARROW_GAPPS=false
+                fi    
             fi
 
             # Perform lunch
