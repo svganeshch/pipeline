@@ -223,6 +223,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         stage("Upload & Notify") {
             uploadNotify()
+            if (checkTGplugin()) {
+                telegramSend("[[${env.buildvariant.toUpperCase()}] Build finished for ${DEVICE}](${BUILD_URL})")
+            }
         }
 
         // Gapps build stage
@@ -247,12 +250,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
                 stage("Upload & Notify") {
                     uploadNotify()
+
+                    if (checkTGplugin()) {
+                        telegramSend("[[${env.buildvariant.toUpperCase()}] Build finished for ${DEVICE}](${BUILD_URL})")
+                    }
                 }
             }
-        }
-
-        if(checkTGplugin()) {
-            telegramSend("[Build finished for ${DEVICE}](${BUILD_URL})")
         }
     }
 }
