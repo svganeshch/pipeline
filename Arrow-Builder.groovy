@@ -28,7 +28,6 @@ environment {
     def NOTIFY_REPO_URL
 
     // device config holders
-    def lunch_override_name
     def repo_paths
     def repo_clones
     def repo_clones_paths
@@ -36,7 +35,6 @@ environment {
     def repopick_changes
 
     // device data (switch holders)
-    def lunch_override_state
     def force_clean
     def test_build
     def is_official
@@ -47,9 +45,6 @@ environment {
     def xda_link
     def global_override
     def default_buildtype_state
-
-    // check holder
-    def lunch_override
 
     // tg notify args
     def TG_ARROW_ZIP
@@ -215,7 +210,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
             echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
             echo "Fetching common configuration"
             echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-            setConfigsData(false, "common_config", false)
+            setConfigsData("common_config", false)
             delConfigRepos()
             cloneConfigRepos()
             repopickTopics()
@@ -268,7 +263,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
 -------------------------------------------------------
 */
 @NonCPS
-public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobalOvr) {
+public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
     try {
         def which_db = VERSION
         def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
@@ -316,22 +311,20 @@ public def setConfigsData(Boolean isDevOvr, String whichDevice, Boolean isGlobal
                             return
                         }
 
-                        env.repo_paths = isDevOvr ? configs.ovr_repo_paths.toString().trim() : configs.repo_paths.toString().trim()
-                        env.repo_clones = isDevOvr ? configs.ovr_repo_clones.toString().trim() : configs.repo_clones.toString().trim()
-                        env.repo_clones_paths = isDevOvr ? configs.ovr_repo_clones_paths.toString().trim() : configs.repo_clones_paths.toString().trim()
-                        env.repopick_topics = isDevOvr ? configs.ovr_repopick_topics.toString().trim() : configs.repopick_topics.toString().trim()
-                        env.repopick_changes = isDevOvr ? configs.ovr_repopick_changes.toString().trim() : configs.repopick_changes.toString().trim()
-                        env.force_clean = isDevOvr ? configs.ovr_force_clean.toString().trim() : configs.force_clean.toString().trim()
-                        env.test_build = isDevOvr ? configs.ovr_test_build.toString().trim() : configs.test_build.toString().trim()
-                        env.is_official = isDevOvr ? configs.ovr_is_official : configs.is_official.toString().trim()
-                        env.buildtype = isDevOvr ? configs.ovr_buildtype.toString().trim() : configs.buildtype.toString().trim()
-                        env.bootimage = isDevOvr ? configs.ovr_bootimage.toString().trim() : configs.bootimage
-                        env.changelog = isDevOvr ? configs.ovr_changelog.toString().trim() : configs.changelog.toString().trim()
+                        env.repo_paths = configs.repo_paths.toString().trim()
+                        env.repo_clones = configs.repo_clones.toString().trim()
+                        env.repo_clones_paths = configs.repo_clones_paths.toString().trim()
+                        env.repopick_topics = configs.repopick_topics.toString().trim()
+                        env.repopick_changes = configs.repopick_changes.toString().trim()
+                        env.force_clean = configs.force_clean.toString().trim()
+                        env.test_build = configs.test_build.toString().trim()
+                        env.is_official = configs.is_official.toString().trim()
+                        env.buildtype = configs.buildtype.toString().trim()
+                        env.bootimage = configs.bootimage
+                        env.changelog = configs.changelog.toString().trim()
 
                         if(whichDevice != "common_config") {
-                            env.lunch_override_name = configs.lunch_override_name.toString().trim()
-                            env.lunch_override_state = configs.lunch_override_state.toString().trim()
-                            env.xda_link = isDevOvr ? configs.ovr_xda_link.toString().trim() : configs.xda_link.toString().trim()
+                            env.xda_link = configs.xda_link.toString().trim()
                         }
                     }
                 } else {
@@ -352,20 +345,10 @@ public def fetchConfigs(def DEVICE) {
         echo "Fetching configuration for ${DEVICE}"
         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
-        setConfigsData(true, DEVICE, false)
-        if(env.lunch_override_name != null && !env.lunch_override_name.isEmpty() && env.lunch_override_state != "no") {
-            echo "Lunch override set to ${env.lunch_override_name}"
-            env.lunch_override = 0
-            //set global overrides
-            setConfigsData(false, "common_config", true)
-            return
-        }
-
-        //set normal device
-        env.lunch_override = 1
-        setConfigsData(false, DEVICE, false)
+        //set device configs
+        setConfigsData(DEVICE, false)
         //set global overrides
-        setConfigsData(false, "common_config", true)
+        setConfigsData("common_config", true)
     } catch(e) {
         throw(e)
     }
@@ -394,8 +377,7 @@ public def deviceLunch(def is_gapps) {
                 export ARROW_GAPPS=false
             fi
 
-            # Perform lunch for the main device as we might be needing them
-            # by the overriding device
+            # Perform lunch
             if [ ! -z '''+env.buildtype+''' ]; then
                 lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
                 if [ $? -ne 0 ]; then
@@ -405,25 +387,6 @@ public def deviceLunch(def is_gapps) {
             else
                 echo "No buildtype specified!"
                 exit 0
-            fi
-
-            if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
-
-                if [ ! -z '''+env.buildtype+''' ]; then
-                    lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
-                    lunch_ovr_ok=$?
-                else 
-                    echo "No buildtype specified!"
-                    exit 0
-                fi
-
-                if [ $lunch_ovr_ok -eq 0 ]; then
-                    echo "lunch override successfull!"
-                else
-                    echo "Failed to override lunch"
-                    echo "Terminating build!"
-                    exit 0
-                fi
             fi
 
             >'''+env.TG_VARS_FILE+'''
@@ -636,25 +599,6 @@ public def deviceCompile() {
             else
                 echo "No buildtype specified!"
                 exit 0
-            fi
-
-            if [ '''+env.lunch_override.toInteger()+''' -eq 0 ]; then
-
-                if [ ! -z '''+env.buildtype+''' ]; then
-                    lunch arrow_'''+env.lunch_override_name+'''-'''+env.buildtype+'''
-                    lunch_ovr_ok=$?
-                else 
-                    echo "No buildtype specified!"
-                    exit 0
-                fi
-
-                if [ $lunch_ovr_ok -eq 0 ]; then
-                    echo "lunch override successfull!"
-                else
-                    echo "Failed to override lunch"
-                    echo "Terminating build!"
-                    exit 0
-                fi
             fi
 
             if [ '''+env.bootimage+''' = "yes" ]; then
