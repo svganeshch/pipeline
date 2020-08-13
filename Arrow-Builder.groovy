@@ -230,7 +230,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
         stage("Upload & Notify") {
             uploadNotify()
             if (checkTGplugin()) {
-                telegramSend("[[${env.buildvariant.toUpperCase()}] Build finished for ${DEVICE}](${BUILD_URL})")
+                telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
             }
         }
 
@@ -258,7 +258,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     uploadNotify()
 
                     if (checkTGplugin()) {
-                        telegramSend("[[${env.buildvariant.toUpperCase()}] Build finished for ${DEVICE}](${BUILD_URL})")
+                        telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
                     }
                 }
             }
