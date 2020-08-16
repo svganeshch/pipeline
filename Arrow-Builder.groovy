@@ -230,7 +230,11 @@ if(!ASSIGNED_NODE.isEmpty()) {
         stage("Upload & Notify") {
             uploadNotify()
             if (checkTGplugin()) {
-                telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
+                if (env.buildvariant == "both") {
+                    telegramSend("[|Stage(1/2) VANILLA| Build finished for ${DEVICE}](${BUILD_URL})")
+                } else {
+                    telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
+                }
             }
         }
 
@@ -258,7 +262,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     uploadNotify()
 
                     if (checkTGplugin()) {
-                        telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
+                        telegramSend("[|Stage(2/2) GAPPS| Build finished for ${DEVICE}](${BUILD_URL})")
                     }
                 }
             }
