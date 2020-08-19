@@ -280,7 +280,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
     try {
         def which_db = VERSION
         def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
-            'configs', 'configs@arrowos.net69', 'com.mysql.jdbc.Driver')
+            'root', 'configs@arrowos.net69', 'com.mysql.jdbc.Driver')
 
         def md = dbcon.connection.metaData
         def deviceTable = md.getTables(null, null, whichDevice, null)
