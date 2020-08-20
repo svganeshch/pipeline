@@ -5,14 +5,14 @@ String calcTimestamp() { ['date', '+%s'].execute().text.trim()}
 
 int NO_OF_NODES = 3
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/android_vendor_arrow/arrow-10.0/node_structure.json".toURL()
-officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/android_vendor_arrow/arrow-10.0/arrow.devices".toURL()
+nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/arrow-10.0/node_structure.json".toURL()
+officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/arrow-10.0/arrow.devices".toURL()
 def activeDevices = active_devices.split(",");
 
 def node1_devices = []
 def node2_devices = []
 def node3_devices = []
-def node7_devices = []
+def node4_devices = []
 
 @NonCPS
 String getDeviceHal(def device) {
@@ -76,8 +76,8 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
                     if(!version.isEmpty()) {
-                        if(version == "arrow-9.x") {
-                            node7_devices.add(device)
+                        if(version == "arrow-community") {
+                            node4_devices.add(device)
                             continue
                         }
                     }
@@ -118,17 +118,17 @@ node("master") {
                     }
                 }
                 
-                // Node 7 (PIE)
-                if(node7_devices != null && !node7_devices.isEmpty()) {
+                // Node 4 (Arrow Community devices)
+                if(node4_devices != null && !node4_devices.isEmpty()) {
                     echo "-------------------------------"
-                    echo "Devices assigned for Arrow-7 (PIE)"
+                    echo "Devices assigned for Arrow-4 (COMMUNITY EDITION)"
                     echo "-------------------------------"
-                    for(n7dev in node7_devices) {
-                        if(n7dev != null && !n7dev.isEmpty() && n7dev != "none") {
-                            echo "Triggering build for ${n7dev}"
+                    for(n4dev in node4_devices) {
+                        if(n4dev != null && !n4dev.isEmpty() && n4dev != "none") {
+                            echo "Triggering build for ${n4dev}"
                             build job: 'Arrow-Builder', parameters: [
-                                string(name: 'DEVICE', value: n7dev),
-                                string(name: 'ASSIGNED_NODE', value: "Arrow-7"),
+                                string(name: 'DEVICE', value: n4dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-4"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version)
                             ], propagate: false, wait: false
