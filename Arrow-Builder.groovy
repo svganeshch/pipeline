@@ -241,13 +241,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
         // Gapps build stage
         if(VERSION != "arrow-9.x" && env.bootimage != "yes" && env.buildvariant == "both") {
             stage("Gapps build") {
-                sh  '''#!/bin/bash
-
-                        if [ ! -d '''+env.SOURCE_DIR+'''/vendor/gapps ]; then
-                            echo "GApps vendor directory not found!"
-                            exit 1
-                        fi
-                    '''
 
                 stage("Device lunch") {
                     env.buildvariant = "gapps"
