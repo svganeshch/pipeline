@@ -667,7 +667,7 @@ public def uploadNotify() {
                         echo "FAILED TO UPLOAD TO SF SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://arrowos.net/download.php"
+                    TG_DOWN_URL="https://downloads.arrowos.net"
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
