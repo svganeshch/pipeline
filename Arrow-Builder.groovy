@@ -265,8 +265,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 }
             }
         }
+     buildNotify()
     }
-    buildNotify()
 }
 
 /* 
@@ -662,7 +662,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
-                    echo TG_TITLE "**New [$(get_build_var TARGET_DEVICE)]($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
+                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
@@ -673,7 +673,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net"
-                    echo TG_TITLE "**New [$(get_build_var TARGET_DEVICE)]($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
+                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
