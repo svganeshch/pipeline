@@ -51,6 +51,7 @@ environment {
     def default_buildtype_state
 
     // tg notify args
+    def is_tgnotify
     def TG_ARROW_ZIP
     def TG_DEVICE
     def TG_DEVICE_MAINTAINER
@@ -59,7 +60,6 @@ environment {
     def TG_BUILD_TYPE
     def TG_BUILD_ZIP_TYPE
     def TG_ARROW_VERSION
-    def TG_TITLE
     def TG_DATE
     def TG_HASHTAGS
     def BUILD_OUT_DIR
@@ -266,7 +266,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
             }
         }
     }
-    notify()
+    buildNotify()
 }
 
 /* 
@@ -422,7 +422,6 @@ public def deviceLunch() {
             echo TG_BUILD_TYPE $(get_build_var ARROW_BUILD_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_BUILD_ZIP_TYPE $(get_build_var ARROW_BUILD_ZIP_TYPE) >> '''+env.TG_VARS_FILE+'''
             echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+env.TG_VARS_FILE+'''
-            echo TG_TITLE "New $(get_build_var TARGET_DEVICE) build ($(get_build_var ARROW_BUILD_ZIP_TYPE)) | (arrow-$(get_build_var ARROW_MOD_VERSION))" >> '''+env.TG_VARS_FILE+'''
             echo TG_DATE `date +'%d/%m/%Y'` >> '''+env.TG_VARS_FILE+'''
             echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+env.TG_VARS_FILE+'''
             echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
@@ -438,7 +437,6 @@ public def deviceLunch() {
         env.TG_BUILD_TYPE = getTgVars("TG_BUILD_TYPE").toString().trim()
         env.TG_BUILD_ZIP_TYPE = getTgVars("TG_BUILD_ZIP_TYPE").toString().trim()
         env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION").toString().trim()
-        env.TG_TITLE = getTgVars("TG_TITLE").toString().trim()
         env.TG_DATE = getTgVars("TG_DATE").toString().trim()
         env.TG_HASHTAGS = getTgVars("TG_HASHTAGS").toString().trim()
         env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR").toString().trim()
@@ -664,6 +662,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
+                    echo TG_TITLE "**New [$(get_build_var TARGET_DEVICE)]($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
@@ -674,6 +673,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net"
+                    echo TG_TITLE "**New [$(get_build_var TARGET_DEVICE)]($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
 
                     # Generate OTA
                     buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
@@ -681,24 +681,6 @@ public def upload() {
                     echo BUILD_ARTIFACT $BUILD_ARTIFACT >> '''+env.TG_VARS_FILE+'''
                     echo BUILD_ARTIFACT_SHA256 $buildsha256 >> '''+env.TG_VARS_FILE+'''
                     echo BUILD_ARTIFACT_SIZE $buildsize >> '''+env.TG_VARS_FILE+'''
-                fi
-
-                # Check for our notify repo dir
-                if [ $notify -eq 0 ]; then
-                    if [ ! -d '''+env.NOTIFY_REPO_DIR+''' ]; then
-                        git clone --recurse-submodules '''+env.NOTIFY_REPO_URL+''' '''+env.NOTIFY_REPO_DIR+'''
-                    fi
-                fi
-
-                # Tweet notify
-                if [ $notify -eq 0 ] && [ '''+env.test_build+''' = "no" ]; then
-                    prep_tweet="('''+env.TG_BUILD_ZIP_TYPE+''')\nUpdate out for '''+env.TG_DEVICE+'''\n\nhttps://arrowos.net/download.php\n\n~@arrow_os"
-                    $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
-                    if [ $? -eq 0 ]; then
-                        echo "POSTED ON TWITTER"
-                    else
-                        echo "FAILED TO POST ON TWITTER"
-                    fi
                 fi
             else
                 echo "NOTHING TO UPLOAD! NO FILE FOUND!"
@@ -739,32 +721,48 @@ public def genOTA() {
     }
 }
 
-public def notify() {
-    is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
+public def buildNotify() {
+    TG_TITLE = getTgVars("TG_TITLE").toString().trim()
+    env.is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
     tg_down_url = getTgVars("TG_DOWN_URL").toString().trim()
     
-    if(is_tgnotify == "yes" && env.bootimage != "yes") {
+    if(env.is_tgnotify == "yes" && env.bootimage != "yes") {
         echo "-----------------------------------------------"
         echo "Notifying on tg"
         echo "-----------------------------------------------"
         build job: 'tg_notify', parameters: [
             string(name: 'is_test', value: env.test_build),
-            string(name: 'TG_TITLE', value: env.TG_TITLE),
-            string(name: 'TG_DOWN_URL', value: tg_down_url),
-            string(name: 'TG_XDA_LINK', value: env.xda_link),
-            string(name: 'TG_DEV_CHANGELOG', value: 'https://arrowos.net/download.php')
+            string(name: 'TG_TITLE', value: TG_TITLE)
         ], propagate: false, wait: false
-    } else if(is_tgnotify == "yes" && env.bootimage == "yes") {
+    } else if(env.is_tgnotify == "yes" && env.bootimage == "yes") {
         echo "-----------------------------------------------"
         echo "Notifying on tg"
         echo "-----------------------------------------------"
         build job: 'tg_notify', parameters: [
             string(name: 'is_test', value: env.test_build),
-            string(name: 'TG_TITLE', value: DEVICE + " (bootimage)"),
-            string(name: 'TG_DOWN_URL', value: tg_down_url),
-            string(name: 'TG_DEV_CHANGELOG', value: env.changelog)
+            string(name: 'TG_TITLE', value: TG_TITLE + " (bootimage)")
         ], propagate: false, wait: false
     }
+    
+    sh  '''#!/bin/bash
+            # Check for our notify repo dir
+            if [ '''+env.is_tgnotify+''' = "yes" ]; then
+                if [ ! -d '''+env.NOTIFY_REPO_DIR+''' ]; then
+                    git clone --recurse-submodules '''+env.NOTIFY_REPO_URL+''' '''+env.NOTIFY_REPO_DIR+'''
+                fi
+            fi
+
+            # Tweet notify
+            if [ '''+env.is_tgnotify+''' = "yes" ] && [ '''+env.test_build+''' = "no" ]; then
+                prep_tweet="Update out for '''+env.TG_DEVICE+'''\n\nhttps://downloads.arrowos.net\n\n~@arrow_os"
+                $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
+                if [ $? -eq 0 ]; then
+                    echo "POSTED ON TWITTER"
+                else
+                    echo "FAILED TO POST ON TWITTER"
+                fi
+            fi
+        '''
 }
 
 // Set build description as executed at end
