@@ -228,7 +228,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage("Upload & Notify") {
-            uploadNotify()
+            upload()
+            
             if (checkTGplugin()) {
                 if (env.buildvariant == "both") {
                     telegramSend("[|Stage(1/2) VANILLA| Build finished for ${DEVICE}](${BUILD_URL})")
@@ -236,6 +237,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
                 }
             }
+            
+            genOTA()
         }
 
         // Gapps build stage
@@ -252,15 +255,18 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 }
 
                 stage("Upload & Notify") {
-                    uploadNotify()
+                    upload()
 
                     if (checkTGplugin()) {
                         telegramSend("[|Stage(2/2) GAPPS| Build finished for ${DEVICE}](${BUILD_URL})")
                     }
+                    
+                    genOTA()
                 }
             }
         }
     }
+    notify()
 }
 
 /* 
@@ -634,7 +640,7 @@ public def deviceCompile() {
     Update & Notify stage
 -----------------------------------------------
 */
-public def uploadNotify() {
+public def upload() {
     sh  '''#!/bin/bash
             
             cd '''+env.SOURCE_DIR+'''
@@ -706,52 +712,59 @@ public def uploadNotify() {
             fi
 
         '''
-        is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
-        tg_down_url = getTgVars("TG_DOWN_URL").toString().trim()
-        build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
-        build_artifact_sha256 = getTgVars("BUILD_ARTIFACT_SHA256").toString().trim()
-        build_artifact_size = getTgVars("BUILD_ARTIFACT_SIZE").toString().trim()
+}
 
-        // GenOTA
-        if(is_tgnotify == "yes" && env.bootimage == "no" && env.test_build == "no") {
-            echo "-----------------------------------------------"
-            echo "Generating ota json"
-            echo "-----------------------------------------------"
-            build job: 'genOTA', parameters: [
-                string(name: 'TG_DEVICE', value: env.TG_DEVICE),
-                string(name: 'TG_DEVICE_CHANGELOG', value: env.changelog),
-                string(name: 'TG_DEVICE_MAINTAINER', value: env.TG_DEVICE_MAINTAINER),
-                string(name: 'TG_DEVICE_MODEL', value: env.TG_DEVICE_MODEL),
-                string(name: 'TG_DEVICE_OEM', value: env.TG_DEVICE_OEM),
-                string(name: 'BUILD_ARTIFACT', value: build_artifact),
-                string(name: 'BUILD_ARTIFACT_SHA256', value: build_artifact_sha256),
-                string(name: 'BUILD_ARTIFACT_SIZE', value: build_artifact_size),
-                string(name: 'TG_BUILD_ZIP_TYPE', value: env.TG_BUILD_ZIP_TYPE)
-            ], propagate: false, wait: false
-        }
+public def genOTA() {
+    is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
+    build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
+    build_artifact_sha256 = getTgVars("BUILD_ARTIFACT_SHA256").toString().trim()
+    build_artifact_size = getTgVars("BUILD_ARTIFACT_SIZE").toString().trim()
 
-        if(is_tgnotify == "yes" && env.bootimage != "yes") {
-            echo "-----------------------------------------------"
-            echo "Notifying on tg"
-            echo "-----------------------------------------------"
-            build job: 'tg_notify', parameters: [
-                string(name: 'is_test', value: env.test_build),
-                string(name: 'TG_TITLE', value: env.TG_TITLE),
-                string(name: 'TG_DOWN_URL', value: tg_down_url),
-                string(name: 'TG_XDA_LINK', value: env.xda_link),
-                string(name: 'TG_DEV_CHANGELOG', value: 'https://arrowos.net/download.php')
-            ], propagate: false, wait: false
-        } else if(is_tgnotify == "yes" && env.bootimage == "yes") {
-            echo "-----------------------------------------------"
-            echo "Notifying on tg"
-            echo "-----------------------------------------------"
-            build job: 'tg_notify', parameters: [
-                string(name: 'is_test', value: env.test_build),
-                string(name: 'TG_TITLE', value: DEVICE + " (bootimage)"),
-                string(name: 'TG_DOWN_URL', value: tg_down_url),
-                string(name: 'TG_DEV_CHANGELOG', value: env.changelog)
-            ], propagate: false, wait: false
-        }
+    // GenOTA
+    if(is_tgnotify == "yes" && env.bootimage == "no" && env.test_build == "no") {
+        echo "-----------------------------------------------"
+        echo "Generating ota json"
+        echo "-----------------------------------------------"
+        build job: 'genOTA', parameters: [
+            string(name: 'TG_DEVICE', value: env.TG_DEVICE),
+            string(name: 'TG_DEVICE_CHANGELOG', value: env.changelog),
+            string(name: 'TG_DEVICE_MAINTAINER', value: env.TG_DEVICE_MAINTAINER),
+            string(name: 'TG_DEVICE_MODEL', value: env.TG_DEVICE_MODEL),
+            string(name: 'TG_DEVICE_OEM', value: env.TG_DEVICE_OEM),
+            string(name: 'BUILD_ARTIFACT', value: build_artifact),
+            string(name: 'BUILD_ARTIFACT_SHA256', value: build_artifact_sha256),
+            string(name: 'BUILD_ARTIFACT_SIZE', value: build_artifact_size),
+            string(name: 'TG_BUILD_ZIP_TYPE', value: env.TG_BUILD_ZIP_TYPE)
+        ], propagate: false, wait: false
+    }
+}
+
+public def notify() {
+    is_tgnotify = getTgVars("TG_NOTIFY").toString().trim()
+    tg_down_url = getTgVars("TG_DOWN_URL").toString().trim()
+    
+    if(is_tgnotify == "yes" && env.bootimage != "yes") {
+        echo "-----------------------------------------------"
+        echo "Notifying on tg"
+        echo "-----------------------------------------------"
+        build job: 'tg_notify', parameters: [
+            string(name: 'is_test', value: env.test_build),
+            string(name: 'TG_TITLE', value: env.TG_TITLE),
+            string(name: 'TG_DOWN_URL', value: tg_down_url),
+            string(name: 'TG_XDA_LINK', value: env.xda_link),
+            string(name: 'TG_DEV_CHANGELOG', value: 'https://arrowos.net/download.php')
+        ], propagate: false, wait: false
+    } else if(is_tgnotify == "yes" && env.bootimage == "yes") {
+        echo "-----------------------------------------------"
+        echo "Notifying on tg"
+        echo "-----------------------------------------------"
+        build job: 'tg_notify', parameters: [
+            string(name: 'is_test', value: env.test_build),
+            string(name: 'TG_TITLE', value: DEVICE + " (bootimage)"),
+            string(name: 'TG_DOWN_URL', value: tg_down_url),
+            string(name: 'TG_DEV_CHANGELOG', value: env.changelog)
+        ], propagate: false, wait: false
+    }
 }
 
 // Set build description as executed at end
