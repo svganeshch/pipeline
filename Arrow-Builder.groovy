@@ -24,8 +24,6 @@ environment {
     def CCACHE_DIR
     def STALE_PATHS_FILE
     def TG_VARS_FILE
-    def NOTIFY_REPO_DIR
-    def NOTIFY_REPO_URL
     def GAPPS_REPO_URL
     def GAPPS_REPO_BRANCH
     def GAPPS_DIR
@@ -78,8 +76,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
         env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
         env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
         env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
-        env.NOTIFY_REPO_DIR = env.MAIN_DISK + "/arrow_notify"
-        env.NOTIFY_REPO_URL = "git@github.com:ArrowOS/arrow_notify.git"
         env.GAPPS_REPO_URL = "git@gitlab.com:ArrowOS/android_vendor_gapps.git"
         env.GAPPS_REPO_BRANCH = "arrow-10.0-2.0"
         env.GAPPS_DIR = env.SOURCE_DIR + "/vendor/gapps".toString().trim()
@@ -743,26 +739,6 @@ public def buildNotify() {
             string(name: 'TG_TITLE', value: TG_TITLE + " (bootimage)")
         ], propagate: false, wait: false
     }
-    
-    sh  '''#!/bin/bash
-            # Check for our notify repo dir
-            if [ '''+env.is_tgnotify+''' = "yes" ]; then
-                if [ ! -d '''+env.NOTIFY_REPO_DIR+''' ]; then
-                    git clone --recurse-submodules '''+env.NOTIFY_REPO_URL+''' '''+env.NOTIFY_REPO_DIR+'''
-                fi
-            fi
-
-            # Tweet notify
-            if [ '''+env.is_tgnotify+''' = "yes" ] && [ '''+env.test_build+''' = "no" ]; then
-                prep_tweet="Update out for '''+env.TG_DEVICE+'''\n\nhttps://downloads.arrowos.net\n\n~@arrow_os"
-                $(echo -e "$prep_tweet" | bash '''+env.NOTIFY_REPO_DIR+'''/tweet/tweet.sh post) > /dev/null
-                if [ $? -eq 0 ]; then
-                    echo "POSTED ON TWITTER"
-                else
-                    echo "FAILED TO POST ON TWITTER"
-                fi
-            fi
-        '''
 }
 
 // Set build description as executed at end
