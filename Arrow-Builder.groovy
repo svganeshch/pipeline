@@ -137,9 +137,16 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         stage('Repo sync') {
                 sh  '''#!/bin/bash
+                        if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+                            # Hardcode this to always the latest version for now
+                            TO_SYNC="arrow-10.0"
+                        else
+                            TO_SYNC='''+VERSION+'''
+                        fi
+                        
                         cd '''+env.SOURCE_DIR+'''
                         rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
+                        repo init -u https://github.com/ArrowOS/android_manifest.git -b $TO_SYNC --depth=1 > /dev/null
                         repo sync --force-sync --no-tags --no-clone-bundle -c -j4
                         if [ $? -ne 0 ]; then
                             exit 1
