@@ -130,7 +130,8 @@ node("master") {
                                 string(name: 'DEVICE', value: n4dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-4"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
-                                string(name: 'VERSION', value: "arrow-10.0")
+                                string(name: 'VERSION', value: "arrow-10.0"),
+                                string(name: 'IS_COMMUNITY', value: "yes")
                             ], propagate: false, wait: false
                             sleep 2
                         }
