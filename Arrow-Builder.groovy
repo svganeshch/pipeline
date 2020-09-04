@@ -197,11 +197,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                 '''
         }
-
-        stage('Device lunch') {
-            deviceLunch()
-        }
-
+        
         stage('Parsing configs data') {
             delConfigRepos()
             cloneConfigRepos()
@@ -217,6 +213,10 @@ if(!ASSIGNED_NODE.isEmpty()) {
             cloneConfigRepos()
             repopickTopics()
             repopickChanges()
+        }
+
+        stage('Device lunch') {
+            deviceLunch()
         }
 
         stage('Compiling') {
