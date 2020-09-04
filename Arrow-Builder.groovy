@@ -374,6 +374,11 @@ public def deviceLunch() {
             if [ '''+env.is_official+''' = "no" ]; then
                 unset ARROW_OFFICIAL
             fi
+            
+            if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+                unset ARROW_OFFICIAL
+                export ARROW_COMMUNITY=true
+            fi
 
             if [ ! -z '''+env.buildvariant+''' ]; then
                 if [ '''+env.buildvariant+''' = "vanilla" ]; then
@@ -592,6 +597,11 @@ public def deviceCompile() {
 
             if [ '''+env.is_official+''' = "no" ]; then
                 unset ARROW_OFFICIAL
+            fi
+            
+            if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+                unset ARROW_OFFICIAL
+                export ARROW_COMMUNITY=true
             fi
 
             # Perform lunch for the main device as we might be needing them
