@@ -137,7 +137,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         stage('Repo sync') {
                 sh  '''#!/bin/bash
-                        if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+                        if [ '''+VERSION+''' = "arrow-community" ]; then
                             # Hardcode this to always the latest version for now
                             TO_SYNC="arrow-10.0"
                         else
@@ -382,7 +382,7 @@ public def deviceLunch() {
                 unset ARROW_OFFICIAL
             fi
             
-            if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+            if [ '''+VERSION+''' = "arrow-community" ]; then
                 unset ARROW_OFFICIAL
                 export ARROW_COMMUNITY=true
             fi
@@ -606,7 +606,7 @@ public def deviceCompile() {
                 unset ARROW_OFFICIAL
             fi
             
-            if [ '''+IS_COMMUNITY+''' = "yes" ]; then
+            if [ '''+VERSION+''' = "arrow-community" ]; then
                 unset ARROW_OFFICIAL
                 export ARROW_COMMUNITY=true
             fi
@@ -665,7 +665,11 @@ public def upload() {
                     TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
-                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    if [ '''+VERSION+''' = "arrow-community" ]; then
+                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    else
+                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                    fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO SF SERVERS"
                         notify=0
