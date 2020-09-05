@@ -679,14 +679,14 @@ public def upload() {
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
-
-                    # Generate OTA
-                    buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
-                    buildsize=$(ls -l $TO_UPLOAD | awk '{print $5}')
-                    echo BUILD_ARTIFACT $BUILD_ARTIFACT >> '''+env.TG_VARS_FILE+'''
-                    echo BUILD_ARTIFACT_SHA256 $buildsha256 >> '''+env.TG_VARS_FILE+'''
-                    echo BUILD_ARTIFACT_SIZE $buildsize >> '''+env.TG_VARS_FILE+'''
                 fi
+
+                # Generate OTA
+                buildsha256=$(sha256sum $TO_UPLOAD | awk '{print $1}')
+                buildsize=$(ls -l $TO_UPLOAD | awk '{print $5}')
+                echo BUILD_ARTIFACT $BUILD_ARTIFACT >> '''+env.TG_VARS_FILE+'''
+                echo BUILD_ARTIFACT_SHA256 $buildsha256 >> '''+env.TG_VARS_FILE+'''
+                echo BUILD_ARTIFACT_SIZE $buildsize >> '''+env.TG_VARS_FILE+'''
             else
                 echo "NOTHING TO UPLOAD! NO FILE FOUND!"
                 echo "NOT PROCEEDING WITH GAPPS BUILD...!!"
@@ -707,12 +707,21 @@ public def genOTA() {
     build_artifact_sha256 = getTgVars("BUILD_ARTIFACT_SHA256").toString().trim()
     build_artifact_size = getTgVars("BUILD_ARTIFACT_SIZE").toString().trim()
 
+    def build_version = sh(returnStdout: true,
+                        script: '''#!/bin/bash
+                                    echo arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d 'v' -f 2-)
+                                '''
+                        )
+
     // GenOTA
-    if(is_tgnotify == "yes" && env.bootimage == "no" && env.test_build == "no") {
+    if(is_tgnotify == "yes" && env.bootimage == "no") {
         echo "-----------------------------------------------"
         echo "Generating ota json"
         echo "-----------------------------------------------"
         build job: 'genOTA', parameters: [
+            string(name: 'IS_TEST', value: env.test_build),
+            string(name: 'TG_BUILD_TYPE', value: env.TG_BUILD_TYPE),
+            string(name: 'TG_BUILD_VERSION', value: build_version),
             string(name: 'TG_DEVICE', value: env.TG_DEVICE),
             string(name: 'TG_DEVICE_CHANGELOG', value: env.changelog),
             string(name: 'TG_DEVICE_MAINTAINER', value: env.TG_DEVICE_MAINTAINER),
