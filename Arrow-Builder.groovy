@@ -654,7 +654,7 @@ public def upload() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-experiments/'''+env.TG_DEVICE+'''/'''+VERSION+''' " | stdbuf -oL tr '\r' '\n'
+                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
                         notify=0
@@ -662,7 +662,7 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-experiments/files/'''+env.TG_DEVICE+'''/'''+VERSION+'''/$BUILD_ARTIFACT/download"
+                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
