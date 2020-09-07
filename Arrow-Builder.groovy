@@ -654,7 +654,13 @@ public def upload() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
+                    if [ '''+VERSION+''' = "arrow-community" ]; then
+                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
+                        TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
+                    else
+                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
+                        TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
+                    fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
                         notify=0
@@ -662,11 +668,10 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
-                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
+                        script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-community/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     else
                         script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     fi
