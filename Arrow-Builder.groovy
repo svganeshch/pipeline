@@ -655,9 +655,15 @@ public def upload() {
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
                     if [ '''+VERSION+''' = "arrow-community" ]; then
+                        #arrow mirror
+                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/var/www/get.mirror1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                        
                         script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
                         TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                     else
+                        #arrow mirror
+                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/var/www/get.mirror1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
+                        
                         script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-beta/'''+VERSION+'''/'''+env.TG_DEVICE+'''" | stdbuf -oL tr '\r' '\n'
                         TG_DOWN_URL="https://sourceforge.net/projects/arrowos-beta/files/'''+VERSION+'''/'''+env.TG_DEVICE+'''/$BUILD_ARTIFACT/download"
                     fi
@@ -671,8 +677,14 @@ public def upload() {
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
+                        #arrow mirror
+                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/var/www/get.mirror1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                        
                         script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrowos-community/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     else
+                        #arrow mirror
+                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/var/www/get.mirror1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
+                        
                         script -q -c "scp $TO_UPLOAD bauuuuu@frs.sourceforge.net:/home/frs/project/arrow-os/'''+VERSION+'''/'''+env.TG_DEVICE+''' " | stdbuf -oL tr '\r' '\n'
                     fi
                     if [ $? -eq 0 ]; then
