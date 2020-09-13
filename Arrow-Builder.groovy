@@ -662,10 +662,10 @@ public def upload() {
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
                     fi
                     if [ $? -eq 0 ]; then
-                        echo "SUCCESSFULLY UPLOADED TEST BUILD TO SERVER"
+                        echo "SUCCESSFULLY UPLOADED TEST BUILD TO ARROW SERVER"
                         notify=0
                     else
-                        echo "FAILED TO UPLOAD TO TEST BUILD SERVER"
+                        echo "FAILED TO UPLOAD TO TEST BUILD ARROW SERVER"
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net"
@@ -679,10 +679,10 @@ public def upload() {
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
                     fi
                     if [ $? -eq 0 ]; then
-                        echo "SUCCESSFULLY UPLOADED TO SF SERVERS"
+                        echo "SUCCESSFULLY UPLOADED TO ARROW SERVERS"
                         notify=0
                     else
-                        echo "FAILED TO UPLOAD TO SF SERVERS"
+                        echo "FAILED TO UPLOAD TO ARROW SERVERS"
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net"
