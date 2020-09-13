@@ -656,7 +656,12 @@ public def upload() {
                 if [ '''+env.test_build+''' = "yes" ]; then
                     if [ '''+VERSION+''' = "arrow-community" ]; then
                         #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                        up_check=1
+                        while [[ $up_check -ne 0 ]]
+                        do
+                            script -q -c "rsync -avb --progress $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                            up_check = $?
+                        done
                     else
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
@@ -673,7 +678,12 @@ public def upload() {
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
                         #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                        up_check=1
+                        while [[ $up_check -ne 0 ]]
+                        do
+                            script -q -c "rsync -avb --progress $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                            up_check = $?
+                        done
                     else
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
