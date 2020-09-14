@@ -668,7 +668,7 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO TEST BUILD ARROW SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://downloads.arrowos.net"
+                    TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
@@ -685,7 +685,7 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO ARROW SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://downloads.arrowos.net"
+                    TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
                 fi
 
