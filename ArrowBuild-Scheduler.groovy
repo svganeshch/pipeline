@@ -81,6 +81,12 @@ node("master") {
                             continue
                         }
                     }
+                    if(!version.isEmpty()) {
+                        if(version == "arrow-11.0") {
+                            node3_devices.add(device)
+                            continue
+                        }
+                    }
                     String devHal = getDeviceHal(device)
 
                     for(i=1; i<=NO_OF_NODES; i++) {
