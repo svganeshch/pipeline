@@ -669,7 +669,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
-                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
+                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+VERSION+''' = "arrow-community" ]; then
                         #arrow mirror
@@ -686,7 +686,7 @@ public def upload() {
                         notify=1
                     fi
                     TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
-                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out!**" >> '''+env.TG_VARS_FILE+'''
+                    echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 fi
 
                 # Generate OTA
