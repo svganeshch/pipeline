@@ -4,13 +4,22 @@ import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
 
-public Boolean checkSlackplugin() {
+public void sendSlackNotify(def msg) {
     def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
     plugins.each { plugin ->
         if(plugin.getShortName() == "slack") {
-            return true
+            msgBlock = [
+                            [
+                                "type": "section",
+                                "text": [
+                                    "type": "mrkdwn",
+                                    "text": msg
+                                ]
+                            ],
+                       ]
+            slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
         } else {
-            return false
+            echo "Slack notification plugin not available!"
         }
     }
 }
@@ -63,10 +72,8 @@ environment {
 if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
-
-        if(checkSlackplugin()) {
-            slackSend color: "good", message: "Build has started for ${DEVICE}\n${BUILD_URL}\nExecuting @ ${ASSIGNED_NODE}"
-        }
+        
+        sendSlackNotify("[Build has started for ${DEVICE}](${BUILD_URL})\nExecuting @ ${ASSIGNED_NODE}")
 
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
@@ -226,13 +233,11 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         stage("Upload & Notify") {
             upload()
-            
-            if (checkSlackplugin()) {
-                if (env.buildvariant == "both") {
-                    slackSend color: "good", message: "|Stage(1/2) VANILLA|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
-                } else {
-                    slackSend color: "good", message: "[|${env.buildvariant.toUpperCase()}|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
-                }
+
+            if (env.buildvariant == "both") {
+                sendSlackNotify("[|Stage(1/2) VANILLA| Build finished for ${DEVICE}](${BUILD_URL})")
+            } else {
+                sendSlackNotify ("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
             }
             
             genOTA()
@@ -254,9 +259,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 stage("Upload & Notify") {
                     upload()
 
-                    if (checkSlackplugin()) {
-                        slackSend color: "good", message: "|Stage(2/2) GAPPS|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
-                    }
+                    sendSlackNotify("[|Stage(2/2) GAPPS| Build finished for ${DEVICE}](${BUILD_URL})")
                     
                     genOTA()
                 }
@@ -765,10 +768,8 @@ public def buildNotify() {
             string(name: 'TG_TITLE', value: TG_TITLE + " (bootimage)")
         ], propagate: false, wait: false
     }
-    
-    if(checkSlackplugin()) {
-        slackSend color: "good", message: "${TG_TITLE}\n${tg_down_url}"
-    }
+
+    sendSlackNotify("[${TG_TITLE}](${tg_down_url})")
 }
 
 // Set build description as executed at end
