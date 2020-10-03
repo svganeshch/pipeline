@@ -8,7 +8,7 @@ public void sendSlackNotify(def msg) {
     def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
     plugins.each { plugin ->
         if(plugin.getShortName() == "slack") {
-            msgBlock = [
+            def msgBlock = [
                             [
                                 "type": "section",
                                 "text": [
@@ -18,8 +18,6 @@ public void sendSlackNotify(def msg) {
                             ],
                        ]
             slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
-        } else {
-            echo "Slack notification plugin not available!"
         }
     }
 }
