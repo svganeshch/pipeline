@@ -72,7 +72,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
         
-        sendSlackNotify("<${BUILD_URL}|Build has started for ${DEVICE}>\n*Executing @ ${ASSIGNED_NODE}*")
+        sendSlackNotify("<${BUILD_URL} + "console"|Build has started for ${DEVICE}>\n*Executing @ ${ASSIGNED_NODE}*")
 
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
@@ -234,9 +234,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
             upload()
 
             if (env.buildvariant == "both") {
-                sendSlackNotify("<${BUILD_URL}|(Stage(1/2) VANILLA) Build finished for ${DEVICE}>")
+                sendSlackNotify("<${BUILD_URL} + "console"|(Stage(1/2) VANILLA) Build finished for ${DEVICE}>")
             } else {
-                sendSlackNotify ("<${BUILD_URL}|(${env.buildvariant.toUpperCase()}) Build finished for ${DEVICE}>")
+                sendSlackNotify ("<${BUILD_URL} + "console"|(${env.buildvariant.toUpperCase()}) Build finished for ${DEVICE}>")
             }
             
             genOTA()
@@ -258,7 +258,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 stage("Upload & Notify") {
                     upload()
 
-                    sendSlackNotify("<${BUILD_URL}|(Stage(2/2) GAPPS) Build finished for ${DEVICE}>")
+                    sendSlackNotify("<${BUILD_URL} + "console"|(Stage(2/2) GAPPS) Build finished for ${DEVICE}>")
                     
                     genOTA()
                 }
