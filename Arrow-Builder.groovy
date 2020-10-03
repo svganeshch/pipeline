@@ -4,10 +4,10 @@ import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
 
-public Boolean checkTGplugin() {
+public Boolean checkSlackplugin() {
     def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
     plugins.each { plugin ->
-        if(plugin.getShortName() == "telegram-notifications") {
+        if(plugin.getShortName() == "slack") {
             return true
         } else {
             return false
@@ -64,8 +64,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
 
-        if(checkTGplugin()) {
-            telegramSend("[Build has started for ${DEVICE}](${BUILD_URL})\nExecuting @ ${ASSIGNED_NODE}")
+        if(checkSlackplugin()) {
+            slackSend color: "good", message: "Build has started for ${DEVICE}\n${BUILD_URL}\nExecuting @ ${ASSIGNED_NODE}"
         }
 
         env.MAIN_DISK = "/source".toString().trim()
@@ -227,11 +227,11 @@ if(!ASSIGNED_NODE.isEmpty()) {
         stage("Upload & Notify") {
             upload()
             
-            if (checkTGplugin()) {
+            if (checkSlackplugin()) {
                 if (env.buildvariant == "both") {
-                    telegramSend("[|Stage(1/2) VANILLA| Build finished for ${DEVICE}](${BUILD_URL})")
+                    slackSend color: "good", message: "|Stage(1/2) VANILLA|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
                 } else {
-                    telegramSend("[|${env.buildvariant.toUpperCase()}| Build finished for ${DEVICE}](${BUILD_URL})")
+                    slackSend color: "good", message: "[|${env.buildvariant.toUpperCase()}|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
                 }
             }
             
@@ -254,8 +254,8 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 stage("Upload & Notify") {
                     upload()
 
-                    if (checkTGplugin()) {
-                        telegramSend("[|Stage(2/2) GAPPS| Build finished for ${DEVICE}](${BUILD_URL})")
+                    if (checkSlackplugin()) {
+                        slackSend color: "good", message: "|Stage(2/2) GAPPS|\nBuild finished for ${DEVICE}\n${BUILD_URL}"
                     }
                     
                     genOTA()
@@ -764,6 +764,10 @@ public def buildNotify() {
             string(name: 'is_test', value: env.test_build),
             string(name: 'TG_TITLE', value: TG_TITLE + " (bootimage)")
         ], propagate: false, wait: false
+    }
+    
+    if(checkSlackplugin()) {
+        slackSend color: "good", message: "${TG_TITLE}\n${tg_down_url}"
     }
 }
 
