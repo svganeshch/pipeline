@@ -72,7 +72,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
     node(ASSIGNED_NODE) {
         currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
         
-        sendSlackNotify("<${BUILD_URL}|Build has started for ${DEVICE}>\nExecuting @ ${ASSIGNED_NODE}")
+        sendSlackNotify("<${BUILD_URL}|Build has started for ${DEVICE}>\n*Executing @ ${ASSIGNED_NODE}*")
 
         env.MAIN_DISK = "/source".toString().trim()
         env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
