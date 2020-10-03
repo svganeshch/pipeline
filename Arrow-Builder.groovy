@@ -4,6 +4,7 @@ import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
 
+@NonCPS
 public void sendSlackNotify(def msg) {
     def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
     plugins.each { plugin ->
