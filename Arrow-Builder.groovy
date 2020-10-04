@@ -42,6 +42,7 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                     replyBroadcast: true,
                     message: msgBlock
                 )
+                slackThreadResp.addReaction("thumbsup")
             }
         }
     }
