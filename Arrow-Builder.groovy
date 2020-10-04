@@ -3,50 +3,62 @@ import java.sql.*;
 import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-slackThreadResp = null
+def slackThreadResp
 
-@NonCPS
-public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) {
+public Boolean checkSlackPlugin() {
+    def isAvailable = false
     def plugins = jenkins.model.Jenkins.instance.getPluginManager().getPlugins()
     plugins.each { plugin ->
         if(plugin.getShortName() == "slack") {
-            def msgBlock = [
+            isAvailable = true
+            return isAvailable
+        }
+    }
+    return isAvailable
+}
+
+public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) {
+    if (!checkSlackPlugin()) {
+        echo "Slack plugin not available/installed!"
+        return
+    }
+
+    def msgBlock = [
+                        [
+                            "type": "section",
+                            "text": [
+                                "type": "mrkdwn",
+                                "text": msg
+                            ]
+                        ],
+                        [
+                            "type": "actions",
+                            "elements": [
                                 [
-                                    "type": "section",
+                                    "type": "button",
                                     "text": [
-                                        "type": "mrkdwn",
-                                        "text": msg
-                                    ]
-                                ],
-                                [
-                                    "type": "actions",
-                                    "elements": [
-                                        [
-                                            "type": "button",
-                                            "text": [
-                                                "type": "plain_text",
-                                                "text": consoleUrl ? "Console" : "Download"
-                                            ],
-                                            "style": "primary",
-                                            "url": consoleUrl ? consoleUrl.toString().trim() : downUrl.toString().trim()
-                                        ]
-                                    ]
+                                        "type": "plain_text",
+                                        "text": consoleUrl ? "Console" : "Download"
+                                    ],
+                                    "style": "primary",
+                                    "url": consoleUrl ? consoleUrl.toString().trim() : downUrl.toString().trim()
                                 ]
                             ]
-                            
-            if (slackThreadResp == null || slackThreadResp.isEmpty()) {
-                slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
-                echo slackThreadResp
-            } else {
-                echo slackThreadResp
-                slackSend(
-                    channel: slackThreadResp.threadId,
-                    replyBroadcast: true,
-                    blocks: msgBlock
-                )
-                slackThreadResp.addReaction("thumbsup")
-            }
+                        ]
+                    ]
+                    
+    if (slackThreadResp == null || slackThreadResp.isEmpty()) {
+        slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
+        slackThreadResp.properties.each {
+            println "$it.key -> $it.value"
         }
+    } else {
+        slackSend(
+            channel: slackThreadResp.threadId,
+            replyBroadcast: true,
+            blocks: msgBlock
+        )
+        slackThreadResp.addReaction("thumbsup")
     }
 }
 
