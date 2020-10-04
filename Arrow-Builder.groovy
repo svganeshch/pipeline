@@ -3,6 +3,7 @@ import java.sql.*;
 import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
+def slackThreadResp
 
 @NonCPS
 public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) {
@@ -32,7 +33,16 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                                     ]
                                 ]
                             ]
-            slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
+                            
+            if (slackThreadResp == null || slackThreadResp.isEmpty()) {
+                slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
+            } else {
+                slackSend(
+                    channel: slackThreadResp.threadId,
+                    replyBroadcast: true,
+                    message: msgBlock
+                )
+            }
         }
     }
 }
