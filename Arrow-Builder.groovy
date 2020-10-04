@@ -10,28 +10,29 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
     plugins.each { plugin ->
         if(plugin.getShortName() == "slack") {
             def msgBlock = [
-                            [
-                                "type": "section",
-                                "text": [
-                                    "type": "mrkdwn",
-                                    "text": msg
+                                [
+                                    "type": "section",
+                                    "text": [
+                                        "type": "mrkdwn",
+                                        "text": msg
+                                    ]
+                                ],
+                                [
+                                    "type": "actions",
+                                    "elements": [
+                                        [
+                                            "type": "button",
+                                            "text": [
+                                                "type": "plain_text",
+                                                "emoji": true,
+                                                "text": consoleUrl ? "Console" : "Download"
+                                            ],
+                                            "style": "primary",
+                                            "value": consoleUrl ? consoleUrl : downUrl
+                                        ]
+                                    ]
                                 ]
-                            ],
-                            [
-                                "type": "actions",
-                                "elements": [
-                                    [
-                                        "type": "button",
-                                        "text": [
-                                            "type": "plain_text",
-                                            "emoji": true,
-                                            "text": consoleUrl ? "Console" : "Download"
-                                        ],
-                                        "style": "primary",
-                                        "value": consoleUrl ? consoleUrl : downUrl
-                                    ],
-                            ],
-                       ]
+                            ]
             slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
         }
     }
