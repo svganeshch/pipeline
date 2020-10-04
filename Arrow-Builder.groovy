@@ -24,11 +24,9 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                                             "type": "button",
                                             "text": [
                                                 "type": "plain_text",
-                                                "emoji": true,
                                                 "text": consoleUrl ? "Console" : "Download"
                                             ],
-                                            "style": "primary",
-                                            "value": consoleUrl ? consoleUrl : downUrl
+                                            "url": consoleUrl ? consoleUrl : downUrl
                                         ]
                                     ]
                                 ]
