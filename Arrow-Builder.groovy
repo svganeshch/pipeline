@@ -26,7 +26,7 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                                                 "type": "plain_text",
                                                 "text": consoleUrl ? "Console" : "Download"
                                             ],
-                                            "url": consoleUrl ? consoleUrl : downUrl
+                                            "url": consoleUrl ? consoleUrl.toString().trim() : downUrl.toString().trim()
                                         ]
                                     ]
                                 ]
