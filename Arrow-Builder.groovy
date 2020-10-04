@@ -36,11 +36,13 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                             
             if (slackThreadResp == null || slackThreadResp.isEmpty()) {
                 slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
+                echo slackThreadResp
             } else {
+                echo slackThreadResp
                 slackSend(
                     channel: slackThreadResp.threadId,
                     replyBroadcast: true,
-                    message: msgBlock
+                    blocks: msgBlock
                 )
                 slackThreadResp.addReaction("thumbsup")
             }
