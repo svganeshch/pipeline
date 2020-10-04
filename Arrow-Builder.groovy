@@ -3,7 +3,7 @@ import java.sql.*;
 import groovy.sql.Sql
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-def slackThreadResp
+slackThreadResp = null
 
 @NonCPS
 public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) {
