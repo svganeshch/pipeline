@@ -55,7 +55,6 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
     } else {
         slackSend(
             channel: slackThreadResp.threadId,
-            replyBroadcast: true,
             blocks: msgBlock
         )
         slackThreadResp.addReaction("thumbsup")
