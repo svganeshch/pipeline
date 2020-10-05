@@ -48,7 +48,7 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                         ]
                     ]
                     
-    if (slackThreadResp == null || slackThreadResp.empty) {
+    if (!slackThreadResp) {
         slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
     } else {
         slackSend(
