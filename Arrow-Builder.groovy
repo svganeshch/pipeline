@@ -1,9 +1,10 @@
 import java.io.*;
 import java.sql.*; 
 import groovy.sql.Sql
+import groovy.transform.Field
 
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-def slackThreadResp
+@Field slackThreadResp
 
 public Boolean checkSlackPlugin() {
     def isAvailable = false
@@ -49,9 +50,6 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
                     
     if (slackThreadResp == null || slackThreadResp.isEmpty()) {
         slackThreadResp = slackSend(channel: "#arrowos-jenkins", blocks: msgBlock)
-        slackThreadResp.properties.each {
-            println "$it.key -> $it.value"
-        }
     } else {
         slackSend(
             channel: slackThreadResp.threadId,
