@@ -55,7 +55,6 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
             channel: slackThreadResp.threadId,
             blocks: msgBlock
         )
-        slackThreadResp.addReaction("thumbsup")
     }
 }
 
@@ -259,11 +258,29 @@ if(!ASSIGNED_NODE.isEmpty()) {
         }
 
         stage('Device lunch') {
-            deviceLunch()
+            try {
+                deviceLunch()
+            } catch (Exception e) {
+                slackThreadResp.addReaction("thumbsdown")
+                slackThreadResp.addReaction("x")
+                sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
+                currentBuild.description = "Device lunch issue"
+                currentBuild.result = 'FAILURE'
+                sh "exit 1"
+            }
         }
 
         stage('Compiling') {
-            deviceCompile()
+            try {
+                deviceCompile()
+            } catch (Exception e) {
+                slackThreadResp.addReaction("thumbsdown")
+                slackThreadResp.addReaction("x")
+                sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
+                currentBuild.description = "Compile error"
+                currentBuild.result = 'FAILURE'
+                sh "exit 1"
+            }
         }
 
         stage("Upload & Notify") {
@@ -284,11 +301,29 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
                 stage("Device lunch") {
                     env.buildvariant = "gapps"
-                    deviceLunch()
+                    try {
+                        deviceLunch()
+                    } catch (Exception e) {
+                        slackThreadResp.addReaction("thumbsdown")
+                        slackThreadResp.addReaction("x")
+                        sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
+                        currentBuild.description = "Device lunch issue"
+                        currentBuild.result = 'FAILURE'
+                        sh "exit 1"
+                    }
                 }
 
                 stage("Compiling") {
-                    deviceCompile()
+                    try {
+                        deviceCompile()
+                    } catch (Exception e) {
+                        slackThreadResp.addReaction("thumbsdown")
+                        slackThreadResp.addReaction("x")
+                        sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
+                        currentBuild.description = "Compile error"
+                        currentBuild.result = 'FAILURE'
+                        sh "exit 1"
+                    }
                 }
 
                 stage("Upload & Notify") {
@@ -810,5 +845,6 @@ public def buildNotify() {
 }
 
 // Set build description as executed at end
+slackThreadResp.addReaction("thumbsup")
 currentBuild.description = "Executed @ ${ASSIGNED_NODE}"
 currentBuild.result = "SUCCESS"
