@@ -293,6 +293,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
             }
             
             genOTA()
+            mirror2()
         }
 
         // Gapps build stage
@@ -332,6 +333,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     sendSlackNotify("*|Stage(2/2) GAPPS| Build finished for ${DEVICE}*", "${BUILD_URL}")
                     
                     genOTA()
+                    mirror2()
                 }
             }
         }
@@ -842,6 +844,14 @@ public def buildNotify() {
     }
 
     sendSlackNotify("*BUILD:*", null, "${tg_down_url}")
+}
+
+public def mirror2() {
+    build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
+    
+    build job: 'mirror2', parameters: [
+        string(name: 'BUILD_ARTIFACT', value: build_artifact)
+    ], propagate: false, wait: false
 }
 
 // Set build description as executed at end
