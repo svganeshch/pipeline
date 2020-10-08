@@ -733,7 +733,7 @@ public def upload() {
                     else
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
-                        script -q -c "scp $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
+                        #script -q -c "scp $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
                     fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO ARROW SERVER"
@@ -751,7 +751,7 @@ public def upload() {
                     else
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
-                        script -q -c "scp $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
+                        #script -q -c "scp $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
                     fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO ARROW SERVERS"
