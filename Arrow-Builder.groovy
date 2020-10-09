@@ -178,16 +178,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
         stage('Repo sync') {
                 sh  '''#!/bin/bash
-                        if [ '''+VERSION+''' = "arrow-community" ]; then
-                            # Hardcode this to always the latest version for now
-                            TO_SYNC="arrow-10.0"
-                        else
-                            TO_SYNC='''+VERSION+'''
-                        fi
-                        
                         cd '''+env.SOURCE_DIR+'''
                         rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                        repo init -u https://github.com/ArrowOS/android_manifest.git -b $TO_SYNC --depth=1 > /dev/null
+                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
                         repo sync --force-sync --no-tags --no-clone-bundle -c -j4
                         if [ $? -ne 0 ]; then
                             exit 1
@@ -349,7 +342,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
 @NonCPS
 public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
     try {
-        def which_db = VERSION
+        def which_db = IS_COMMUNITY == "true" ? VERSION + "_community" : VERSION
         def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
             'mirror1', 'get.mirror1.arrowos.net@69', 'com.mysql.jdbc.Driver')
 
@@ -457,7 +450,7 @@ public def deviceLunch() {
                 unset ARROW_OFFICIAL
             fi
             
-            if [ '''+VERSION+''' = "arrow-community" ]; then
+            if [ '''+IS_COMMUNITY+''' = "true" ]; then
                 unset ARROW_OFFICIAL
                 export ARROW_COMMUNITY=true
             fi
@@ -681,7 +674,7 @@ public def deviceCompile() {
                 unset ARROW_OFFICIAL
             fi
             
-            if [ '''+VERSION+''' = "arrow-community" ]; then
+            if [ '''+IS_COMMUNITY+''' = "true" ]; then
                 unset ARROW_OFFICIAL
                 export ARROW_COMMUNITY=true
             fi
@@ -729,7 +722,7 @@ public def upload() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    if [ '''+VERSION+''' = "arrow-community" ]; then
+                    if [ '''+IS_COMMUNITY+''' = "true" ]; then
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
                     else
@@ -746,7 +739,7 @@ public def upload() {
                     TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
-                    if [ '''+VERSION+''' = "arrow-community" ]; then
+                    if [ '''+IS_COMMUNITY+''' = "true" ]; then
                         #arrow mirror
                         script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
                     else

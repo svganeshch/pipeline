@@ -1,12 +1,15 @@
 import groovy.json.JsonSlurper
+import groovy.transform.Field
 
 String calcDate() { ['date', '+%Y%m%d'].execute().text.trim()}
 String calcTimestamp() { ['date', '+%s'].execute().text.trim()}
 
-int NO_OF_NODES = 3
+int NO_OF_NODES = 4
+@Field Boolean isCommunity = false
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/arrow-10.0/node_structure.json".toURL()
-officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/arrow-10.0/arrow.devices".toURL()
+nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/node_structure.json".toURL()
+officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow.devices".toURL()
+communityDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow-community.devices".toURL()
 def activeDevices = active_devices.split(",");
 
 def node1_devices = []
@@ -17,10 +20,13 @@ def node4_devices = []
 @NonCPS
 String getDeviceHal(def device) {
     String gotHal = null
-    officialDevicesUrl.eachLine {
-        if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[1] == device) {
-                gotHal = it.split(" ")[3]
+    def devicesUrl = isCommunity ? communityDevicesUrl : officialDevicesUrl
+    devicesUrl.eachLine {
+        if(it != "" && it != null) {
+            if(it.charAt(0) != null && it.charAt(0) != "#") {
+                if(it.split(" ")[1] == device) {
+                    gotHal = it.split(" ")[3]
+                }
             }
         }
     }
@@ -30,10 +36,13 @@ String getDeviceHal(def device) {
 @NonCPS
 Boolean isExplicitN1(def device) {
     Boolean isN1 = false
-    officialDevicesUrl.eachLine {
-        if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[0] == "\$" && it.split(" ")[1] == device) {
-                isN1 = true
+    def devicesUrl = isCommunity ? communityDevicesUrl : officialDevicesUrl
+    devicesUrl.eachLine {
+        if(it != "" && it != null) {
+            if(it.charAt(0) != null && it.charAt(0) != "" && it.charAt(0) != "#") {
+                if(it.split(" ")[0] == "\$" && it.split(" ")[1] == device) {
+                    isN1 = true
+                }
             }
         }
     }
@@ -43,10 +52,13 @@ Boolean isExplicitN1(def device) {
 @NonCPS
 Boolean isExplicitN2(def device) {
     Boolean isN2 = false
-    officialDevicesUrl.eachLine {
-        if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[0] == "@" && it.split(" ")[1] == device) {
-                isN2 = true
+    def devicesUrl = isCommunity ? communityDevicesUrl : officialDevicesUrl
+    devicesUrl.eachLine {
+        if(it != "" && it != null) {
+            if(it.charAt(0) != null && it.charAt(0) != "" && it.charAt(0) != "#") {
+                if(it.split(" ")[0] == "@" && it.split(" ")[1] == device) {
+                    isN2 = true
+                }
             }
         }
     }
@@ -56,14 +68,33 @@ Boolean isExplicitN2(def device) {
 @NonCPS
 Boolean isExplicitN3(def device) {
     Boolean isN3 = false
-    officialDevicesUrl.eachLine {
-        if(it.charAt(0) != null && it.charAt(0) != "#") {
-            if(it.split(" ")[0] == "!" && it.split(" ")[1] == device) {
-                isN3 = true
+    def devicesUrl = isCommunity ? communityDevicesUrl : officialDevicesUrl
+    devicesUrl.eachLine {
+        if(it != "" && it != null) {
+            if(it.charAt(0) != null && it.charAt(0) != "" && it.charAt(0) != "#") {
+                if(it.split(" ")[0] == "!" && it.split(" ")[1] == device) {
+                    isN3 = true
+                }
             }
         }
     }
     return isN3
+}
+
+@NonCPS
+Boolean isExplicitN4(def device) {
+    Boolean isN4 = false
+    def devicesUrl = isCommunity ? communityDevicesUrl : officialDevicesUrl
+    devicesUrl.eachLine {
+        if(it != "" && it != null) {
+            if(it.charAt(0) != null && it.charAt(0) != "" && it.charAt(0) != "#") {
+                if(it.split(" ")[0] == "^" && it.split(" ")[1] == device) {
+                    isN4 = true
+                }
+            }
+        }
+    }
+    return isN4
 }
 
 node("master") {
@@ -76,18 +107,11 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
                     if(!version.isEmpty()) {
-                        if(version == "arrow-community") {
-                            node4_devices.add(device)
-                            continue
+                        if(version.contains("community")) {
+                            version = version.split('_')[0]
+                            isCommunity = true
                         }
                     }
-                    if(!version.isEmpty()) {
-                        if(version == "arrow-11.0") {
-                            node3_devices.add(device)
-                            continue
-                        }
-                    }
-                    String devHal = getDeviceHal(device)
 
                     for(i=1; i<=NO_OF_NODES; i++) {
                         if(isExplicitN1(device)) {
@@ -108,8 +132,17 @@ node("master") {
                             break
                         }
 
-                        if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
-                            assign_node = "Arrow-${i}"
+                        if(isExplicitN4(device)) {
+                            assign_node = "Arrow-4"
+                            echo "Explictly assigning ${assign_node} node for ${device}"
+                            break
+                        }
+
+                        String devHal = getDeviceHal(device)
+                        if(i != 4) {
+                            if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
+                                assign_node = "Arrow-${i}"
+                            }
                         }
                     }
 
@@ -119,6 +152,8 @@ node("master") {
                         node2_devices.add(device)
                     } else if(assign_node == "Arrow-3") {
                         node3_devices.add(device)
+                    } else if(assign_node == "Arrow-4") {
+                        node4_devices.add(device)
                     } else {
                         echo "No node assigned for ${device}"
                     }
@@ -127,7 +162,7 @@ node("master") {
                 // Node 4 (Arrow Community devices)
                 if(node4_devices != null && !node4_devices.isEmpty()) {
                     echo "-------------------------------"
-                    echo "Devices assigned for Arrow-4 (COMMUNITY EDITION)"
+                    echo "Devices assigned for Arrow-4"
                     echo "-------------------------------"
                     for(n4dev in node4_devices) {
                         if(n4dev != null && !n4dev.isEmpty() && n4dev != "none") {
@@ -136,7 +171,8 @@ node("master") {
                                 string(name: 'DEVICE', value: n4dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-4"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
-                                string(name: 'VERSION', value: version)
+                                string(name: 'VERSION', value: version),
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -155,7 +191,8 @@ node("master") {
                                 string(name: 'DEVICE', value: n3dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
-                                string(name: 'VERSION', value: version)
+                                string(name: 'VERSION', value: version),
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -174,7 +211,8 @@ node("master") {
                                 string(name: 'DEVICE', value: n2dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
-                                string(name: 'VERSION', value: version)
+                                string(name: 'VERSION', value: version),
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -193,7 +231,8 @@ node("master") {
                                 string(name: 'DEVICE', value: n1dev),
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
-                                string(name: 'VERSION', value: version)
+                                string(name: 'VERSION', value: version),
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
                             ], propagate: false, wait: false
                             sleep 2
                         }
