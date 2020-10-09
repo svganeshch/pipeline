@@ -646,7 +646,6 @@ public def deviceCompile() {
             # Linux exports
             export PATH=~/bin:$PATH
             export USE_CCACHE=1
-            export CCACHE_COMPRESS=1
             export CCACHE_DIR='''+env.CCACHE_DIR+'''
             export KBUILD_BUILD_USER=release
             export KBUILD_BUILD_HOST=ArrowOS
