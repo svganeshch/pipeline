@@ -7,15 +7,21 @@ String calcTimestamp() { ['date', '+%s'].execute().text.trim()}
 int NO_OF_NODES = 4
 @Field Boolean isCommunity = false
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
-nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/node_structure.json".toURL()
-officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow.devices".toURL()
-communityDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow-community.devices".toURL()
 def activeDevices = active_devices.split(",");
 
 def node1_devices = []
 def node2_devices = []
 def node3_devices = []
 def node4_devices = []
+
+@Field nodeStructureUrl
+@Field officialDevicesUrl
+@Field communityDevicesUrl
+public void setInfraUrls(def version) {
+    nodeStructureUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/node_structure.json".toURL()
+    officialDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow.devices".toURL()
+    communityDevicesUrl = "https://raw.githubusercontent.com/ArrowOS/arrow_infrastructure_devices/${version}/arrow-community.devices".toURL()
+}
 
 @NonCPS
 String getDeviceHal(def device) {
@@ -109,6 +115,8 @@ node("master") {
                             isCommunity = true
                         }
                     }
+                    // set infra urls now
+                    setInfraUrls(version)
 
                     for(i=1; i<=NO_OF_NODES; i++) {
                         if(isExplicitN1(device)) {
