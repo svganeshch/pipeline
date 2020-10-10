@@ -722,11 +722,19 @@ public def upload() {
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
                     if [ '''+IS_COMMUNITY+''' = "true" ]; then
-                        #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                        if [ '''+ASSIGNED_NODE+''' = "Arrow-4" ]; then
+                            script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                        else
+                            #arrow mirror
+                            script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments" | stdbuf -oL tr '\r' '\n'
+                        fi
                     else
-                        #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
+                        if [ '''+ASSIGNED_NODE+''' = "Arrow-4" ]; then
+                            script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
+                        else
+                            #arrow mirror
+                            script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments" | stdbuf -oL tr '\r' '\n'
+                        fi
                     fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO ARROW SERVER"
@@ -739,11 +747,19 @@ public def upload() {
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
                     if [ '''+IS_COMMUNITY+''' = "true" ]; then
-                        #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                        if [ '''+ASSIGNED_NODE+''' = "Arrow-4" ]; then
+                            script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                        else
+                            #arrow mirror
+                            script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community" | stdbuf -oL tr '\r' '\n'
+                        fi
                     else
-                        #arrow mirror
-                        script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
+                        if [ '''+ASSIGNED_NODE+''' = "Arrow-4" ]; then
+                            script -q -c "scp $TO_UPLOAD root@10.0.0.200:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
+                        else
+                            #arrow mirror
+                            script -q -c "scp $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official" | stdbuf -oL tr '\r' '\n'
+                        fi
                     fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO ARROW SERVERS"
