@@ -100,9 +100,6 @@ Boolean isExplicitN4(def device) {
 node("master") {
     stage("Assigning Nodes!") {
         try {
-            String nodeStructure = nodeStructureUrl.text
-            def nodeStJson = jsonParse(nodeStructure)
-    
             if(activeDevices != null && activeDevices.length !=0 && activeDevices[0] != "none") {
                 for(device in activeDevices) {
                     String assign_node = null
@@ -138,6 +135,8 @@ node("master") {
                             break
                         }
 
+                        String nodeStructure = nodeStructureUrl.text
+                        def nodeStJson = jsonParse(nodeStructure)
                         String devHal = getDeviceHal(device)
                         if(i != 4) {
                             if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
