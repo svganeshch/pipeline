@@ -13,6 +13,7 @@ def node1_devices = []
 def node2_devices = []
 def node3_devices = []
 def node4_devices = []
+def node5_devices = []
 
 @Field nodeStructureUrl
 @Field officialDevicesUrl
@@ -158,15 +159,37 @@ node("master") {
                     } else if(assign_node == "Arrow-2") {
                         node2_devices.add(device)
                     } else if(assign_node == "Arrow-3") {
-                        node3_devices.add(device)
+                        //node3_devices.add(device)
+                        node5_devices.add(device)
                     } else if(assign_node == "Arrow-4") {
-                        node4_devices.add(device)
+                        //node4_devices.add(device)
+                        node5_devices.add(device)
                     } else {
                         echo "No node assigned for ${device}"
                     }
                 }
                 
-                // Node 4 (Arrow Community devices)
+                // Node 5 (Super node temp)
+                if(node5_devices != null && !node5_devices.isEmpty()) {
+                    echo "-------------------------------"
+                    echo "Devices assigned for Arrow-5"
+                    echo "-------------------------------"
+                    for(n5dev in node5_devices) {
+                        if(n5dev != null && !n5dev.isEmpty() && n5dev != "none") {
+                            echo "Triggering build for ${n5dev}"
+                            build job: 'Arrow-Builder', parameters: [
+                                string(name: 'DEVICE', value: n5dev),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-5"),
+                                string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
+                                string(name: 'VERSION', value: version),
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                            ], propagate: false, wait: false
+                            sleep 2
+                        }
+                    }
+                }
+                
+                // Node 4
                 if(node4_devices != null && !node4_devices.isEmpty()) {
                     echo "-------------------------------"
                     echo "Devices assigned for Arrow-4"
