@@ -647,6 +647,8 @@ public def deviceCompile() {
             export PATH=~/bin:$PATH
             export USE_CCACHE=1
             export CCACHE_DIR='''+env.CCACHE_DIR+'''
+            export BUILD_USERNAME=arrow
+            export BUILD_HOSTNAME=release
             export KBUILD_BUILD_USER=release
             export KBUILD_BUILD_HOST=ArrowOS
             export LOCALVERSION=-Arrow
