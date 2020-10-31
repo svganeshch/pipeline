@@ -9,11 +9,11 @@ int NO_OF_NODES = 4
 def jsonParse(def json) { new groovy.json.JsonSlurperClassic().parseText(json) }
 def activeDevices = active_devices.split(",");
 
-def node1_devices = []
-def node2_devices = []
-def node3_devices = []
-def node4_devices = []
-def node5_devices = []
+@Field node1_devices = []
+@Field node2_devices = []
+@Field node3_devices = []
+@Field node4_devices = []
+@Field node5_devices = []
 
 @Field nodeStructureUrl
 @Field officialDevicesUrl
@@ -104,12 +104,37 @@ Boolean isExplicitN4(def device) {
     return isN4
 }
 
+public void assignNode(def assign_node, def device) {
+    if(assign_node == "Arrow-1") {
+        node1_devices.add(device)
+    } else if(assign_node == "Arrow-2") {
+        node2_devices.add(device)
+    } else if(assign_node == "Arrow-3") {
+        node3_devices.add(device)
+    } else if(assign_node == "Arrow-4") {
+        node4_devices.add(device)
+    } else if(assign_node == "Arrow-5") {
+        node5_devices.add(device)
+    } else {
+        echo "No node assigned for ${device}"
+    }
+}
+
 node("master") {
     stage("Assigning Nodes!") {
         try {
             if(activeDevices != null && activeDevices.length !=0 && activeDevices[0] != "none") {
                 for(device in activeDevices) {
                     String assign_node = null
+
+                    // Force node if specified
+                    if(!force_node.isEmpty() && force_node != "default") {
+                        assign_node = force_node.trim()
+                        echo "Forcing node to ${assign_node}"
+                        assignNode(assign_node, device)
+                        continue
+                    }
+
                     if(!version.isEmpty()) {
                         if(version.contains("community")) {
                             version = version.split('_')[0]
@@ -119,54 +144,44 @@ node("master") {
                     // set infra urls now
                     setInfraUrls(version)
 
-                    for(i=1; i<=NO_OF_NODES; i++) {
-                        if(isExplicitN1(device)) {
-                            assign_node = "Arrow-1"
-                            echo "Explictly assigning ${assign_node} node for ${device}"
-                            break
-                        }
+                    if(assign_node == null) {
+                        for(i=1; i<=NO_OF_NODES; i++) {
+                            if(isExplicitN1(device)) {
+                                assign_node = "Arrow-1"
+                                echo "Explictly assigning ${assign_node} node for ${device}"
+                                break
+                            }
 
-                        if(isExplicitN2(device)) {
-                            assign_node = "Arrow-2"
-                            echo "Explictly assigning ${assign_node} node for ${device}"
-                            break
-                        }
+                            if(isExplicitN2(device)) {
+                                assign_node = "Arrow-2"
+                                echo "Explictly assigning ${assign_node} node for ${device}"
+                                break
+                            }
 
-                        if(isExplicitN3(device)) {
-                            assign_node = "Arrow-3"
-                            echo "Explictly assigning ${assign_node} node for ${device}"
-                            break
-                        }
+                            if(isExplicitN3(device)) {
+                                assign_node = "Arrow-3"
+                                echo "Explictly assigning ${assign_node} node for ${device}"
+                                break
+                            }
 
-                        if(isExplicitN4(device)) {
-                            assign_node = "Arrow-4"
-                            echo "Explictly assigning ${assign_node} node for ${device}"
-                            break
-                        }
+                            if(isExplicitN4(device)) {
+                                assign_node = "Arrow-4"
+                                echo "Explictly assigning ${assign_node} node for ${device}"
+                                break
+                            }
 
-                        String nodeStructure = nodeStructureUrl.text
-                        def nodeStJson = jsonParse(nodeStructure)
-                        String devHal = getDeviceHal(device)
-                        if(i != 4) {
-                            if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
-                                assign_node = "Arrow-${i}"
+                            String nodeStructure = nodeStructureUrl.text
+                            def nodeStJson = jsonParse(nodeStructure)
+                            String devHal = getDeviceHal(device)
+                            if(i != 4) {
+                                if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
+                                    assign_node = "Arrow-${i}"
+                                }
                             }
                         }
                     }
 
-                    if(assign_node == "Arrow-1") {
-                        node1_devices.add(device)
-                    } else if(assign_node == "Arrow-2") {
-                        node2_devices.add(device)
-                    } else if(assign_node == "Arrow-3") {
-                        //node3_devices.add(device)
-                        node5_devices.add(device)
-                    } else if(assign_node == "Arrow-4") {
-                        //node4_devices.add(device)
-                        node5_devices.add(device)
-                    } else {
-                        echo "No node assigned for ${device}"
-                    }
+                    assignNode(assign_node, device)
                 }
                 
                 // Node 5 (Super node temp)
