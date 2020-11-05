@@ -209,6 +209,15 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         mka clean
                         return
+                    elif [ $avail_space -le 50 ]; then
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        echo " "
+                        echo "Available space way below minimum!"
+                        echo "Performing a full clean"
+                        echo " "
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        mka clean
+                        return
                     else
                         echo "Force clean not enabled"
                     fi
