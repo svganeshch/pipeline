@@ -193,10 +193,10 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     cd '''+env.SOURCE_DIR+'''
                     source build/envsetup.sh > /dev/null
 
-                    avail_space=$(df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1)
+                    avail_space="df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     echo " "
-                    echo "Current Available Space: $avail_space"
+                    echo "Current Available Space: $(eval "$avail_space")"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
@@ -204,15 +204,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
                         echo "Force clean enabled!"
-                        echo "Performing a full clean"
-                        echo " "
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        mka clean
-                        return
-                    elif [ $avail_space -le 50 ]; then
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        echo " "
-                        echo "Available space way below minimum!"
                         echo "Performing a full clean"
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
@@ -236,9 +227,20 @@ if(!ASSIGNED_NODE.isEmpty()) {
 
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     echo " "
-                    echo "Doing installclean"
+                    echo "Will proceed with installclean"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    
+                    if [ $(eval "$avail_space") -le 50 ]; then
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        echo " "
+                        echo "Available space way below minimum!"
+                        echo "Performing a full clean"
+                        echo " "
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        mka clean
+                        return
+                    fi
                 '''
         }
         
