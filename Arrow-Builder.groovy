@@ -208,7 +208,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         mka clean
-                        return
+                        exit 0
                     else
                         echo "Force clean not enabled"
                     fi
@@ -239,7 +239,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         mka clean
-                        return
+                        exit 0
                     fi
                 '''
         }
