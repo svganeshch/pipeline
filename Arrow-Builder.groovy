@@ -341,7 +341,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 }
             }
         }
-     buildNotify()
+        if(DEVICE_PROFILE == "test") {
+            buildNotify()
+        }
     }
 }
 
