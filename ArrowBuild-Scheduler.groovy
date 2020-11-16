@@ -197,7 +197,8 @@ node("master") {
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-5"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
-                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
+                                string(name: 'DEVICE_PROFILE', value: device_profile)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -217,7 +218,8 @@ node("master") {
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-4"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
-                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
+                                string(name: 'DEVICE_PROFILE', value: device_profile)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -237,7 +239,8 @@ node("master") {
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
-                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
+                                string(name: 'DEVICE_PROFILE', value: device_profile)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -257,7 +260,8 @@ node("master") {
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
-                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
+                                string(name: 'DEVICE_PROFILE', value: device_profile)
                             ], propagate: false, wait: false
                             sleep 2
                         }
@@ -277,7 +281,8 @@ node("master") {
                                 string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
-                                string(name: 'IS_COMMUNITY', value: isCommunity.toString())
+                                string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
+                                string(name: 'DEVICE_PROFILE', value: device_profile)
                             ], propagate: false, wait: false
                             sleep 2
                         }
