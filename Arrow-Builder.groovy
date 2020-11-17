@@ -58,7 +58,7 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
     }
 }
 
-currentBuild.displayName = "${DEVICE} (${VERSION})"
+currentBuild.displayName = "${DEVICE} (${VERSION}) (${DEVICE_PROFILE})"
 currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
 
 environment {
