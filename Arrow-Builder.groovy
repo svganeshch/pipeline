@@ -193,7 +193,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     cd '''+env.SOURCE_DIR+'''
                     source build/envsetup.sh > /dev/null
 
-                    avail_space="df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
+                    if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
+                        avail_space="df | grep /home | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
+                    else
+                        avail_space="df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
+                    fi
+                    
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     echo " "
                     echo "Current Available Space: $(eval "$avail_space")"
