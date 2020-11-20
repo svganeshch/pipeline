@@ -236,6 +236,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    echo " "
+                    echo "Current Available Space after product clean: $(eval "$avail_space")"
+                    echo " "
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    
                     if [ $(eval "$avail_space") -le 50 ]; then
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
