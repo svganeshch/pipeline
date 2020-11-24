@@ -198,14 +198,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
                             disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
                             if [ $disk_size -ge 100 ]; then
                                 avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
-                                export OUT_DIR_COMMON_BASE=/media/tempo
+                                export is_ramdisk=yes
                             fi
                         else
-                            unset OUT_DIR_COMMON_BASE
                             avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
                         fi
                     else
-                        unset OUT_DIR_COMMON_BASE
                         avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
                     fi
                     
@@ -687,6 +685,19 @@ public def deviceCompile() {
             export KBUILD_BUILD_USER=release
             export KBUILD_BUILD_HOST=ArrowOS
             export LOCALVERSION=-Arrow
+            
+            # Set ramdisk
+            if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
+                if grep -w -q "/media/tempo" <<< $(df -h); then
+                    disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+                    if [ $disk_size -ge 100 ]; then
+                        export OUT_DIR=/media/tempo
+                        echo "---------------------------------"
+                        echo "BUILD OUT SET TO $OUT_DIR"
+                        echo "---------------------------------"
+                    fi
+                fi
+            fi          
 
             # Rom exports
             if [ '''+env.buildtype+''' = "user" ]; then
