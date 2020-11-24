@@ -194,8 +194,18 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     source build/envsetup.sh > /dev/null
 
                     if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
+                        if grep -w -q "/media/tempo" <<< $(df -h); then
+                            disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+                            if [ $disk_size -ge 100 ]; then
+                                avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
+                                export OUT_DIR_COMMON_BASE=/media/tempo
+                            fi
+                        else
+                            unset OUT_DIR_COMMON_BASE
+                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
+                        fi
                     else
+                        unset OUT_DIR_COMMON_BASE
                         avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
                     fi
                     
