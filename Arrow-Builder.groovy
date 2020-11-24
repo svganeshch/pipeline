@@ -194,9 +194,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     source build/envsetup.sh > /dev/null
 
                     if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                        avail_space="df | grep /home | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
+                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
                     else
-                        avail_space="df | grep /source | df -BG --output=avail $(awk 'FNR == 1 {print $1}') | awk 'FNR == 2 {print $1}' | cut -d 'G' -f 1"
+                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
                     fi
                     
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
