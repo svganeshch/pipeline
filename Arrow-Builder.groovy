@@ -686,6 +686,7 @@ public def deviceCompile() {
             fi
             export ALLOW_MISSING_DEPENDENCIES=true
             export ARROW_OFFICIAL=true
+            export WITHOUT_CHECK_API=true
             
             if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then
                 export ARROW_GAPPS=true
