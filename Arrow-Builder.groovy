@@ -527,7 +527,6 @@ public def deviceLunch() {
             echo TG_ARROW_VERSION $(get_build_var ARROW_MOD_VERSION) >> '''+env.TG_VARS_FILE+'''
             echo TG_DATE `date +'%d/%m/%Y'` >> '''+env.TG_VARS_FILE+'''
             echo TG_HASHTAGS "#ArrowOS #Arrow" >> '''+env.TG_VARS_FILE+'''
-            echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
 
         '''
 
@@ -542,7 +541,6 @@ public def deviceLunch() {
         env.TG_ARROW_VERSION = getTgVars("TG_ARROW_VERSION").toString().trim()
         env.TG_DATE = getTgVars("TG_DATE").toString().trim()
         env.TG_HASHTAGS = getTgVars("TG_HASHTAGS").toString().trim()
-        env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR").toString().trim()
 }
 
 public def getTgVars(def tg_key) {
@@ -745,6 +743,9 @@ public def deviceCompile() {
                 echo "No buildtype specified!"
                 exit 0
             fi
+            
+            # Save build out path
+            echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
 
             if [ '''+env.bootimage+''' = "yes" ]; then
                 mka bootimage
@@ -753,6 +754,8 @@ public def deviceCompile() {
                 mka bacon
             fi
         '''
+    
+    env.BUILD_OUT_DIR = getTgVars("BUILD_OUT_DIR").toString().trim()
 }
 
 
