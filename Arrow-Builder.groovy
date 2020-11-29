@@ -213,6 +213,16 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
+                    if [ ! -z $OUT_DIR ]; then
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        echo " "
+                        echo "Performing a full clean for $OUT_DIR"
+                        echo " "
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        mka clean
+                        exit 0
+                    fi
+
                     if [ '''+env.force_clean+''' == "yes" ]; then
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
