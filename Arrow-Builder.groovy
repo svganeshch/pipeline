@@ -199,6 +199,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
                             if [ $disk_size -ge 100 ]; then
                                 avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
                                 export is_ramdisk=yes
+                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                                echo " "
+                                echo "REMOVING OUT"
+                                echo " "
+                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                                rm -rf /media/tempo/*
                             fi
                         else
                             avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
@@ -212,16 +218,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "Current Available Space: $(eval "$avail_space")"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-
-                    if [ ! -z $OUT_DIR ]; then
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        echo " "
-                        echo "Performing a full clean for $OUT_DIR"
-                        echo " "
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        mka clean
-                        exit 0
-                    fi
 
                     if [ '''+env.force_clean+''' == "yes" ]; then
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
