@@ -199,12 +199,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
                             if [ $disk_size -ge 100 ]; then
                                 avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
                                 export is_ramdisk=yes
-                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                                echo " "
-                                echo "REMOVING OUT"
-                                echo " "
-                                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                                rm -rf /media/tempo/*
                             fi
                         else
                             avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
@@ -237,7 +231,12 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo "Nuking product out!"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    rm -rf '''+env.SOURCE_DIR+'''/out/target/product/*
+                    if [ $is_ramdisk == "yes" ]; then
+                        rm -rf /media/tempo/out/target/product/*
+                    else
+                        rm -rf '''+env.SOURCE_DIR+'''/out/target/product/*
+                    fi
+                    
                     if [ $? -eq 0 ]; then
                         echo "Cleaned up product out dirs!"
                     else
@@ -263,8 +262,13 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo "Performing a full clean"
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        mka clean
-                        exit 0
+                        if [ $is_ramdisk == "yes" ]; then
+                            rm -rf /media/tempo/*
+                            exit 0
+                        else
+                            mka clean
+                            exit 0
+                        fi
                     fi
                 '''
         }
