@@ -135,14 +135,6 @@ node("master") {
                     }
                     // set infra urls now
                     setInfraUrls(version)
-                    
-                    // Force node if specified
-                    if(!force_node.isEmpty() && force_node != "default") {
-                        assign_node = force_node.trim()
-                        echo "Forcing node to ${assign_node}"
-                        assignNode(assign_node, device)
-                        continue
-                    }
 
                     if(assign_node == null) {
                         for(i=1; i<=NO_OF_NODES; i++) {
@@ -182,6 +174,28 @@ node("master") {
                     }
 
                     assignNode(assign_node, device)
+                }
+                
+                // Force node if specified
+                if(!force_node.isEmpty() && force_node != "default") {
+                    assign_node = force_node.trim()
+                    echo "Forcing node to ${assign_node}"
+                    for (i=0; i<=node4_devices.size(); i++) {
+                        assignNode(force_node, node4_devices[i])
+                        node4_devices[i] = null
+                    }
+                    for (i=0; i<=node3_devices.size(); i++) {
+                        assignNode(force_node, node3_devices[i])
+                        node3_devices[i] = null
+                    }
+                    for (i=0; i<=node2_devices.size(); i++) {
+                        assignNode(force_node, node2_devices[i])
+                        node2_devices[i] = null
+                    }
+                    for (i=0; i<=node1_devices.size(); i++) {
+                        assignNode(force_node, node1_devices[i])
+                        node1_devices[i] = null
+                    }
                 }
                 
                 // Node 5 (Super node temp)
