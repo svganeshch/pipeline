@@ -180,19 +180,19 @@ node("master") {
                 if(!force_node.isEmpty() && force_node != "default") {
                     force_node = force_node.trim()
                     echo "Forcing node to ${force_node}"
-                    for (i=0; i<=node4_devices.size(); i++) {
+                    for (i=0; i<node4_devices.size(); i++) {
                         assignNode(force_node, node4_devices[i])
                         node4_devices[i] = null
                     }
-                    for (i=0; i<=node3_devices.size(); i++) {
+                    for (i=0; i<node3_devices.size(); i++) {
                         assignNode(force_node, node3_devices[i])
                         node3_devices[i] = null
                     }
-                    for (i=0; i<=node2_devices.size(); i++) {
+                    for (i=0; i<node2_devices.size(); i++) {
                         assignNode(force_node, node2_devices[i])
                         node2_devices[i] = null
                     }
-                    for (i=0; i<=node1_devices.size(); i++) {
+                    for (i=0; i<node1_devices.size(); i++) {
                         assignNode(force_node, node1_devices[i])
                         node1_devices[i] = null
                     }
