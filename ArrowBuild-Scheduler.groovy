@@ -178,7 +178,7 @@ node("master") {
                 
                 // Force node if specified
                 if(!force_node.isEmpty() && force_node != "default") {
-                    assign_node = force_node.trim()
+                    force_node = force_node.trim()
                     echo "Forcing node to ${assign_node}"
                     for (i=0; i<=node4_devices.size(); i++) {
                         assignNode(force_node, node4_devices[i])
