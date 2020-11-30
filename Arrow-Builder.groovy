@@ -595,10 +595,31 @@ public def cloneConfigRepos() {
     repoClonesUrl.repo_clones.eachWithIndex { url,i ->
         def rurl = repoClonesUrl["repo_clones"][i]
         def rpath = repoClonesPaths["repo_clones_paths"][i]
+        def rbranch = rurl.split(" ")[2]
         sh  '''#!/bin/bash
 
                 cd '''+env.SOURCE_DIR+'''
-                git clone '''+rurl+''' '''+rpath+''' --depth=1
+                
+                # Gapps repo fetch/clone
+                if [ '''+rpath+''' == "vendor/gapps" ]; then
+                    if [ -d '''+rpath+''' ]; then
+                        cd '''+rpath+'''
+                        git checkout '''+rbranch+'''
+                        git reset --hard && git clean -f
+                        git fetch origin
+                        git checkout origin/'''+rbranch+'''
+                        
+                        echo "---------------------------------"
+                        echo "Fetched latest Gapps changes"
+                        echo "---------------------------------"
+                        exit 0
+                    else
+                        git clone '''+rurl+''' '''+rpath+''' --depth=1
+                    fi
+                else
+                    git clone '''+rurl+''' '''+rpath+''' --depth=1
+                fi
+                
                 if [ $? -eq 0 ]; then
                     echo "---------------------------------"
                     echo "Cloned repo '''+rurl+''' into '''+rpath+''' "
