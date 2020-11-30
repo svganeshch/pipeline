@@ -232,7 +232,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     if [ $is_ramdisk == "yes" ]; then
-                        rm -rf /media/tempo/out/target/product/*
+                        rm -rf /media/tempo/target/product/*
                     else
                         rm -rf '''+env.SOURCE_DIR+'''/out/target/product/*
                     fi
