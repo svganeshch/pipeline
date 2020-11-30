@@ -714,19 +714,6 @@ public def deviceCompile() {
             export KBUILD_BUILD_USER=release
             export KBUILD_BUILD_HOST=ArrowOS
             export LOCALVERSION=-Arrow
-            
-            # Set ramdisk
-            if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                if grep -w -q "/media/tempo" <<< $(df -h); then
-                    disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
-                    if [ $disk_size -ge 100 ]; then
-                        export OUT_DIR=/media/tempo
-                        echo "---------------------------------"
-                        echo "BUILD OUT SET TO $OUT_DIR"
-                        echo "---------------------------------"
-                    fi
-                fi
-            fi          
 
             # Rom exports
             if [ '''+env.buildtype+''' = "user" ]; then
@@ -754,6 +741,20 @@ public def deviceCompile() {
             if [ '''+IS_COMMUNITY+''' = "true" ]; then
                 unset ARROW_OFFICIAL
                 export ARROW_COMMUNITY=true
+            fi
+            
+            # Set ramdisk
+            if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
+                if grep -w -q "/media/tempo" <<< $(df -h); then
+                    disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+                    if [ $disk_size -ge 100 ]; then
+                        export USE_CCACHE=0
+                        export OUT_DIR=/media/tempo
+                        echo "---------------------------------"
+                        echo "BUILD OUT SET TO $OUT_DIR"
+                        echo "---------------------------------"
+                    fi
+                fi
             fi
 
             # Perform lunch for the main device as we might be needing them
