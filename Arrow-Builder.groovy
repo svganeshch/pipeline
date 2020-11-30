@@ -615,6 +615,7 @@ public def cloneConfigRepos() {
                         exit 0
                     else
                         git clone '''+rurl+''' '''+rpath+''' --depth=1
+                        exit 0
                     fi
                 else
                     git clone '''+rurl+''' '''+rpath+''' --depth=1
