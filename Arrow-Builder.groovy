@@ -199,6 +199,10 @@ if(!ASSIGNED_NODE.isEmpty()) {
                             if [ $disk_size -ge 100 ]; then
                                 avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
                                 export is_ramdisk=yes
+                                export OUT_DIR=/media/tempo
+                                echo "---------------------------------"
+                                echo "BUILD OUT SET TO $OUT_DIR"
+                                echo "---------------------------------"
                             fi
                         else
                             avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
@@ -221,6 +225,13 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         mka clean
+
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                        echo " "
+                        echo "Current Available Space after full clean: $(eval "$avail_space")"
+                        echo " "
+                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+
                         exit 0
                     else
                         echo "Force clean not enabled"
@@ -264,9 +275,20 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         if [ $is_ramdisk == "yes" ]; then
                             rm -rf /media/tempo/*
+
+                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                            echo " "
+                            echo "Current Available Space after full clean: $(eval "$avail_space")"
+                            echo " "
+                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                             exit 0
                         else
                             mka clean
+                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                            echo " "
+                            echo "Current Available Space after full clean: $(eval "$avail_space")"
+                            echo " "
+                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                             exit 0
                         fi
                     fi
