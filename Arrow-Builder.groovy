@@ -255,7 +255,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     
-                    if [ $(eval "$avail_space") -le 50 ]; then
+                    if [ $(eval "$avail_space") -le 80 ]; then
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
                         echo "Available space way below minimum!"
