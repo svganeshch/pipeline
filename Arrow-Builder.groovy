@@ -213,18 +213,14 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
-                    if [ '''+env.force_clean+''' == "yes" ]; then
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        echo " "
-                        echo "Force clean enabled!"
-                        echo "Performing a full clean"
-                        echo " "
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        mka clean
-                        exit 0
-                    else
-                        echo "Force clean not enabled"
-                    fi
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    echo " "
+                    echo "Force clean!"
+                    echo "Performing a full clean"
+                    echo " "
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    mka clean
+                    exit 0
 
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     echo " "
@@ -752,8 +748,14 @@ public def deviceCompile() {
                         export is_node5=yes
                         export USE_CCACHE=0
                         export OUT_DIR=/media/tempo
+                        export COMMON_OUT_STORAGE_PATH=/source/common
+                        export ARROW_FIXUP_COMMON_OUT=1
                         echo "---------------------------------"
                         echo "BUILD OUT SET TO $OUT_DIR"
+                        echo "---------------------------------"
+                        
+                        echo "---------------------------------"
+                        echo "ARROW COMMON OUT SET TO $COMMON_OUT_STORAGE_PATH"
                         echo "---------------------------------"
                     fi
                 fi
