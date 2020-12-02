@@ -533,6 +533,12 @@ public def deviceLunch() {
             # Perform lunch
             if [ ! -z '''+env.buildtype+''' ]; then
                 lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+
+                if [ $(get_build_var TARGET_CPU_VARIANT) != "generic" ] && [ $(get_build_var TARGET_2ND_CPU_VARIANT) != "generic" ]; then
+                    echo "Device target cpu variants not generic!"
+                    exit 1
+                fi
+                
                 if [ $? -ne 0 ]; then
                     echo "Device lunch FAILED!"
                     exit 1
@@ -785,6 +791,7 @@ public def deviceCompile() {
             # by the overriding device
             if [ ! -z '''+env.buildtype+''' ]; then
                 lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
+
                 if [ $? -ne 0 ]; then
                     echo "Device lunch FAILED!"
                     exit 1
