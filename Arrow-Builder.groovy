@@ -266,7 +266,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     
-                    if [ $(eval "$avail_space") -le 80 ]; then
+                    if [ $(eval "$avail_space") -le 40 ]; then
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
                         echo "Available space way below minimum!"
@@ -538,7 +538,11 @@ public def deviceLunch() {
                     echo "Device target cpu variants not generic!"
                     exit 1
                 fi
-                
+
+                if [ $(get_build_var TARGET_ARCH_VARIANT) != "armv8-a" ] && [ $(get_build_var TARGET_2ND_ARCH_VARIANT) != "armv8-a" ]; then
+                    echo "Device target arch not matching!"
+                    exit 1
+                fi
                 if [ $? -ne 0 ]; then
                     echo "Device lunch FAILED!"
                     exit 1
