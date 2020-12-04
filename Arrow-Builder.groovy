@@ -273,7 +273,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                 repoStatus = sh(returnStatus: true,
                                 script: '''#!/bin/bash
                                             cd '''+env.SOURCE_DIR+'''
-                                            repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null
+                                            repo forall -c "git clean -fdx && git reset --hard " -j$(nproc --all) > /dev/null
                                         '''
                                 )
 
@@ -288,7 +288,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         cd '''+env.SOURCE_DIR+'''
                         rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
                         repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
-                        repo sync --force-sync --no-tags --no-clone-bundle -c -j4
+                        repo sync --force-sync --no-tags --no-clone-bundle -c -j$(nproc --all)
                         if [ $? -ne 0 ]; then
                             exit 1
                         fi
