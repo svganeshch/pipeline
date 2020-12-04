@@ -120,74 +120,6 @@ if(!ASSIGNED_NODE.isEmpty()) {
             fetchConfigs(DEVICE)
         }
 
-        stage("Hard reset") {
-                sh '''#!/bin/bash +x
-                    cd '''+env.SOURCE_DIR+'''
-
-                    if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
-                        txt_content=$(cat '''+env.STALE_PATHS_FILE+''')
-                        if [ "$txt_content" != "" ]; then
-                            echo "------------------------------------------"
-                            echo "Deleting stale repos from previous build"
-                            echo "------------------------------------------"
-                            while IFS= read -r line
-                            do
-                                cd '''+env.SOURCE_DIR+'''
-                                rm -rf "$line" > /dev/null
-                                if [ $? -eq 0 ]; then
-                                    echo "---------------------------------"
-                                    echo "Deleted directory $line"
-                                    echo "---------------------------------"
-                                else
-                                    echo "---------------------------------"
-                                    echo "Failed to delete directory $line"
-                                    echo "---------------------------------"
-                                fi
-                            done < '''+env.STALE_PATHS_FILE+'''
-                            > '''+env.STALE_PATHS_FILE+'''
-                        else
-                            echo "---------------------------------"
-                            echo "No stale repos present!"
-                            echo "---------------------------------"
-                        fi
-                    else
-                        echo "---------------------------------"
-                        echo "No stale paths file found!"
-                        echo "---------------------------------"
-                    fi
-                    '''
-
-                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                echo " "
-                echo "Performing hard reset and clean!"
-                echo " "
-                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                echo " "
-                repoStatus = sh(returnStatus: true,
-                                script: '''#!/bin/bash
-                                            cd '''+env.SOURCE_DIR+'''
-                                            repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null
-                                        '''
-                                )
-
-                if(repoStatus == 0)
-                    echo "Hard rest and clean done!"
-                else
-                    echo "Hard reset and clean had issues!"
-        }
-
-        stage('Repo sync') {
-                sh  '''#!/bin/bash
-                        cd '''+env.SOURCE_DIR+'''
-                        rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
-                        repo sync --force-sync --no-tags --no-clone-bundle -c -j4
-                        if [ $? -ne 0 ]; then
-                            exit 1
-                        fi
-                    '''
-        }
-
         stage('Clean plate') {
             sh  '''#!/bin/bash
                     cd '''+env.SOURCE_DIR+'''
@@ -293,6 +225,74 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         fi
                     fi
                 '''
+        }
+
+        stage("Hard reset") {
+                sh '''#!/bin/bash +x
+                    cd '''+env.SOURCE_DIR+'''
+
+                    if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
+                        txt_content=$(cat '''+env.STALE_PATHS_FILE+''')
+                        if [ "$txt_content" != "" ]; then
+                            echo "------------------------------------------"
+                            echo "Deleting stale repos from previous build"
+                            echo "------------------------------------------"
+                            while IFS= read -r line
+                            do
+                                cd '''+env.SOURCE_DIR+'''
+                                rm -rf "$line" > /dev/null
+                                if [ $? -eq 0 ]; then
+                                    echo "---------------------------------"
+                                    echo "Deleted directory $line"
+                                    echo "---------------------------------"
+                                else
+                                    echo "---------------------------------"
+                                    echo "Failed to delete directory $line"
+                                    echo "---------------------------------"
+                                fi
+                            done < '''+env.STALE_PATHS_FILE+'''
+                            > '''+env.STALE_PATHS_FILE+'''
+                        else
+                            echo "---------------------------------"
+                            echo "No stale repos present!"
+                            echo "---------------------------------"
+                        fi
+                    else
+                        echo "---------------------------------"
+                        echo "No stale paths file found!"
+                        echo "---------------------------------"
+                    fi
+                    '''
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Performing hard reset and clean!"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                repoStatus = sh(returnStatus: true,
+                                script: '''#!/bin/bash
+                                            cd '''+env.SOURCE_DIR+'''
+                                            repo forall -c "git clean -fdx && git reset --hard " -j4 > /dev/null
+                                        '''
+                                )
+
+                if(repoStatus == 0)
+                    echo "Hard rest and clean done!"
+                else
+                    echo "Hard reset and clean had issues!"
+        }
+
+        stage('Repo sync') {
+                sh  '''#!/bin/bash
+                        cd '''+env.SOURCE_DIR+'''
+                        rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
+                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
+                        repo sync --force-sync --no-tags --no-clone-bundle -c -j4
+                        if [ $? -ne 0 ]; then
+                            exit 1
+                        fi
+                    '''
         }
         
         stage('Parsing configs data') {
