@@ -175,9 +175,9 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     if [ $is_ramdisk == "yes" ]; then
-                        rm -rf /media/tempo/target/product/*
+                        rm -rf /media/tempo/target/product/{*,.*}
                     else
-                        rm -rf '''+env.SOURCE_DIR+'''/out/target/product/*
+                        rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
                     fi
                     
                     if [ $? -eq 0 ]; then
@@ -206,7 +206,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         if [ $is_ramdisk == "yes" ]; then
-                            rm -rf /media/tempo/*
+                            rm -rf /media/tempo/{*,.*}
 
                             echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                             echo " "
