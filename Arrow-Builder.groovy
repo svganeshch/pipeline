@@ -349,6 +349,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
             
             genOTA()
             mirror2()
+            mirror3()
         }
 
         // Gapps build stage
@@ -981,6 +982,14 @@ public def mirror2() {
     build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
     
     build job: 'mirror2', parameters: [
+        string(name: 'BUILD_ARTIFACT', value: build_artifact)
+    ], propagate: false, wait: false
+}
+
+public def mirror3() {
+    build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
+    
+    build job: 'mirror3', parameters: [
         string(name: 'BUILD_ARTIFACT', value: build_artifact)
     ], propagate: false, wait: false
 }
