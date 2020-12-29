@@ -390,6 +390,7 @@ if(!ASSIGNED_NODE.isEmpty()) {
                     
                     genOTA()
                     mirror2()
+                    mirror3()
                 }
             }
         }
