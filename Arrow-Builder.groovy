@@ -537,7 +537,9 @@ public def deviceLunch() {
                 lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
                 
                 # Store roomservice repo paths into our stale file
-                cat '''+env.SOURCE_DIR+'''/.repo/local_manifests/roomservice.xml | awk '{ print $3 }' | grep "path" | cut -d '"' -f2 >> '''+env.STALE_PATHS_FILE+'''
+                if [ -d '''+env.SOURCE_DIR+'''/.repo/local_manifests ]; then
+                    cat '''+env.SOURCE_DIR+'''/.repo/local_manifests/roomservice.xml | awk '{ print $3 }' | grep "path" | cut -d '"' -f2 >> '''+env.STALE_PATHS_FILE+'''
+                fi
 
                 if [ $(get_build_var TARGET_CPU_VARIANT) != "generic" ] && [ $(get_build_var TARGET_2ND_CPU_VARIANT) != "generic" ]; then
                     echo "Device target cpu variants not generic!"
