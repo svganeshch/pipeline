@@ -180,21 +180,21 @@ node("master") {
                 if(!force_node.isEmpty() && force_node != "default") {
                     force_node = force_node.trim()
                     echo "Forcing node to ${force_node}"
-                    for (i=0; i<node4_devices.size(); i++) {
-                        assignNode(force_node, node4_devices[i])
-                        node4_devices[i] = null
+                    node4_devices.each { id, device ->
+                        assignNode(force_node, device)
+                        node4_devices[id] = null
                     }
-                    for (i=0; i<node3_devices.size(); i++) {
-                        assignNode(force_node, node3_devices[i])
-                        node3_devices[i] = null
+                    node3_devices.each { id, device ->
+                        assignNode(force_node, device)
+                        node3_devices[id] = null
                     }
-                    for (i=0; i<node2_devices.size(); i++) {
-                        assignNode(force_node, node2_devices[i])
-                        node2_devices[i] = null
+                    node2_devices.each { id, device ->
+                        assignNode(force_node, device)
+                        node2_devices[id] = null
                     }
-                    for (i=0; i<node1_devices.size(); i++) {
-                        assignNode(force_node, node1_devices[i])
-                        node1_devices[i] = null
+                    node1_devices.each { id, device ->
+                        assignNode(force_node, device)
+                        node1_devices[id] = null
                     }
                 }
                 
