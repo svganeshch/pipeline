@@ -181,20 +181,20 @@ node("master") {
                     force_node = force_node.trim()
                     echo "Forcing node to ${force_node}"
                     node4_devices.eachWithIndex { device, id ->
-                        assignNode(force_node, device)
                         node4_devices[id] = null
+                        assignNode(force_node, device)
                     }
                     node3_devices.eachWithIndex { device, id ->
-                        assignNode(force_node, device)
                         node3_devices[id] = null
+                        assignNode(force_node, device)
                     }
                     node2_devices.eachWithIndex { device, id ->
-                        assignNode(force_node, device)
                         node2_devices[id] = null
+                        assignNode(force_node, device)
                     }
                     node1_devices.eachWithIndex { device, id ->
-                        assignNode(force_node, device)
                         node1_devices[id] = null
+                        assignNode(force_node, device)
                     }
                 }
                 
