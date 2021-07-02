@@ -127,74 +127,60 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
 
-                    if(!version.isEmpty()) {
-                        if(version.contains("community")) {
-                            version = version.split('_')[0]
-                            isCommunity = true
+                    // Force node if specified
+                    if(!force_node.isEmpty() && force_node != "default") {
+                        force_node = force_node.trim()
+                        echo "Forcing node to ${force_node}"
+                        assignNode(force_node, device)
+                    } else {
+                        /* Auto or Explicit assign nodes */
+                        if(!version.isEmpty()) {
+                            if(version.contains("community")) {
+                                version = version.split('_')[0]
+                                isCommunity = true
+                            }
                         }
-                    }
-                    // set infra urls now
-                    setInfraUrls(version)
+                        // set infra urls now
+                        setInfraUrls(version)
 
-                    if(assign_node == null) {
-                        for(i=1; i<=NO_OF_NODES; i++) {
-                            if(isExplicitN1(device)) {
-                                assign_node = "Arrow-1"
-                                echo "Explictly assigning ${assign_node} node for ${device}"
-                                break
-                            }
+                        if(assign_node == null) {
+                            for(i=1; i<=NO_OF_NODES; i++) {
+                                if(isExplicitN1(device)) {
+                                    assign_node = "Arrow-1"
+                                    echo "Explictly assigning ${assign_node} node for ${device}"
+                                    break
+                                }
 
-                            if(isExplicitN2(device)) {
-                                assign_node = "Arrow-2"
-                                echo "Explictly assigning ${assign_node} node for ${device}"
-                                break
-                            }
+                                if(isExplicitN2(device)) {
+                                    assign_node = "Arrow-2"
+                                    echo "Explictly assigning ${assign_node} node for ${device}"
+                                    break
+                                }
 
-                            if(isExplicitN3(device)) {
-                                assign_node = "Arrow-3"
-                                echo "Explictly assigning ${assign_node} node for ${device}"
-                                break
-                            }
+                                if(isExplicitN3(device)) {
+                                    assign_node = "Arrow-3"
+                                    echo "Explictly assigning ${assign_node} node for ${device}"
+                                    break
+                                }
 
-                            if(isExplicitN4(device)) {
-                                assign_node = "Arrow-4"
-                                echo "Explictly assigning ${assign_node} node for ${device}"
-                                break
-                            }
+                                if(isExplicitN4(device)) {
+                                    assign_node = "Arrow-4"
+                                    echo "Explictly assigning ${assign_node} node for ${device}"
+                                    break
+                                }
 
-                            String nodeStructure = nodeStructureUrl.text
-                            def nodeStJson = jsonParse(nodeStructure)
-                            String devHal = getDeviceHal(device)
-                            if(i != 4) {
-                                if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
-                                    assign_node = "Arrow-${i}"
+                                String nodeStructure = nodeStructureUrl.text
+                                def nodeStJson = jsonParse(nodeStructure)
+                                String devHal = getDeviceHal(device)
+                                if(i != 4) {
+                                    if(nodeStJson["arrow-"+i][0]["hals"].contains(devHal)) {
+                                        assign_node = "Arrow-${i}"
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    assignNode(assign_node, device)
-                }
-                
-                // Force node if specified
-                if(!force_node.isEmpty() && force_node != "default") {
-                    force_node = force_node.trim()
-                    echo "Forcing node to ${force_node}"
-                    node4_devices.eachWithIndex { device, id ->
-                        node4_devices[id] = null
-                        assignNode(force_node, device)
-                    }
-                    node3_devices.eachWithIndex { device, id ->
-                        node3_devices[id] = null
-                        assignNode(force_node, device)
-                    }
-                    node2_devices.eachWithIndex { device, id ->
-                        node2_devices[id] = null
-                        assignNode(force_node, device)
-                    }
-                    node1_devices.eachWithIndex { device, id ->
-                        node1_devices[id] = null
-                        assignNode(force_node, device)
+                        assignNode(assign_node, device)
                     }
                 }
                 
