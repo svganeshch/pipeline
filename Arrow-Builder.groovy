@@ -59,7 +59,7 @@ public void sendSlackNotify(def msg, def consoleUrl = null, def downUrl = null) 
 }
 
 currentBuild.displayName = "${DEVICE} (${VERSION}) (${DEVICE_PROFILE})"
-currentBuild.description = "Waiting for Executor @ ${ASSIGNED_NODE}"
+currentBuild.description = "Waiting for Executor"
 
 environment {
     def MAIN_DISK
@@ -103,300 +103,299 @@ environment {
     def BUILD_OUT_DIR
 }
 
-if(!ASSIGNED_NODE.isEmpty()) {
-    node(ASSIGNED_NODE) {
-        currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
-        
-        sendSlackNotify("*Build has started for ${DEVICE}*\n*Executing @ ${ASSIGNED_NODE}*", "${BUILD_URL}")
+node(ASSIGNED_NODE) {
+    env.ASSIGNED_NODE = NODE_NAME
+    currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
+    
+    sendSlackNotify("*Build has started for ${DEVICE}*\n*Executing @ ${ASSIGNED_NODE}*", "${BUILD_URL}")
 
-        env.MAIN_DISK = "/source".toString().trim()
-        env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
-        env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
-        env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
-        env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
+    env.MAIN_DISK = "/source".toString().trim()
+    env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
+    env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
+    env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
+    env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
 
-        stage('Fetching configs from DB') {
-            echo "Establishing connection to configs DB...!"
-            fetchConfigs(DEVICE)
-        }
+    stage('Fetching configs from DB') {
+        echo "Establishing connection to configs DB...!"
+        fetchConfigs(DEVICE)
+    }
 
-        stage('Clean plate') {
-            sh  '''#!/bin/bash
-                    cd '''+env.SOURCE_DIR+'''
-                    source build/envsetup.sh > /dev/null
+    stage('Clean plate') {
+        sh  '''#!/bin/bash
+                cd '''+env.SOURCE_DIR+'''
+                source build/envsetup.sh > /dev/null
 
-                    if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                        if grep -w -q "/media/tempo" <<< $(df -h); then
-                            disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
-                            if [ $disk_size -ge 100 ]; then
-                                avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
-                                export is_ramdisk=yes
-                                export OUT_DIR=/media/tempo
-                                echo "---------------------------------"
-                                echo "BUILD OUT SET TO $OUT_DIR"
-                                echo "---------------------------------"
-                            fi
-                        else
-                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
+                if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
+                    if grep -w -q "/media/tempo" <<< $(df -h); then
+                        disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+                        if [ $disk_size -ge 100 ]; then
+                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
+                            export is_ramdisk=yes
+                            export OUT_DIR=/media/tempo
+                            echo "---------------------------------"
+                            echo "BUILD OUT SET TO $OUT_DIR"
+                            echo "---------------------------------"
                         fi
                     else
-                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
+                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
                     fi
-                    
+                else
+                    avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
+                fi
+                
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Current Available Space: $(eval "$avail_space")"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+
+                if [ '''+env.force_clean+''' == "yes" ]; then
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     echo " "
-                    echo "Current Available Space: $(eval "$avail_space")"
+                    echo "Force clean enabled!"
+                    echo "Performing a full clean"
+                    echo " "
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    mka clean
+
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    echo " "
+                    echo "Current Available Space after full clean: $(eval "$avail_space")"
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
 
-                    if [ '''+env.force_clean+''' == "yes" ]; then
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        echo " "
-                        echo "Force clean enabled!"
-                        echo "Performing a full clean"
-                        echo " "
-                        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        mka clean
+                    exit 0
+                else
+                    echo "Force clean not enabled"
+                fi
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Nuking product out!"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                if [ $is_ramdisk == "yes" ]; then
+                    rm -rf /media/tempo/target/product/{*,.*}
+                else
+                    rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
+                fi
+                
+                if [ $? -eq 0 ]; then
+                    echo "Cleaned up product out dirs!"
+                else
+                    echo "Failed to nuke product out dirs"
+                fi
+
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Will proceed with installclean"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                echo " "
+                echo "Current Available Space after product clean: $(eval "$avail_space")"
+                echo " "
+                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                
+                if [ $(eval "$avail_space") -le 40 ]; then
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    echo " "
+                    echo "Available space way below minimum!"
+                    echo "Performing a full clean"
+                    echo " "
+                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+                    if [ $is_ramdisk == "yes" ]; then
+                        rm -rf /media/tempo/{*,.*}
 
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
                         echo "Current Available Space after full clean: $(eval "$avail_space")"
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-
                         exit 0
                     else
-                        echo "Force clean not enabled"
-                    fi
-
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    echo " "
-                    echo "Nuking product out!"
-                    echo " "
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    if [ $is_ramdisk == "yes" ]; then
-                        rm -rf /media/tempo/target/product/{*,.*}
-                    else
-                        rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
-                    fi
-                    
-                    if [ $? -eq 0 ]; then
-                        echo "Cleaned up product out dirs!"
-                    else
-                        echo "Failed to nuke product out dirs"
-                    fi
-
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    echo " "
-                    echo "Will proceed with installclean"
-                    echo " "
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    echo " "
-                    echo "Current Available Space after product clean: $(eval "$avail_space")"
-                    echo " "
-                    echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                    
-                    if [ $(eval "$avail_space") -le 40 ]; then
+                        mka clean
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
-                        echo "Available space way below minimum!"
-                        echo "Performing a full clean"
+                        echo "Current Available Space after full clean: $(eval "$avail_space")"
                         echo " "
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                        if [ $is_ramdisk == "yes" ]; then
-                            rm -rf /media/tempo/{*,.*}
+                        exit 0
+                    fi
+                fi
+            '''
+    }
 
-                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                            echo " "
-                            echo "Current Available Space after full clean: $(eval "$avail_space")"
-                            echo " "
-                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                            exit 0
-                        else
-                            mka clean
-                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                            echo " "
-                            echo "Current Available Space after full clean: $(eval "$avail_space")"
-                            echo " "
-                            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                            exit 0
-                        fi
+    stage("Hard reset") {
+            sh '''#!/bin/bash +x
+                cd '''+env.SOURCE_DIR+'''
+
+                if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
+                    txt_content=$(cat '''+env.STALE_PATHS_FILE+''')
+                    if [ "$txt_content" != "" ]; then
+                        echo "------------------------------------------"
+                        echo "Deleting stale repos from previous build"
+                        echo "------------------------------------------"
+                        while IFS= read -r line
+                        do
+                            cd '''+env.SOURCE_DIR+'''
+                            rm -rf "$line" > /dev/null
+                            if [ $? -eq 0 ]; then
+                                echo "---------------------------------"
+                                echo "Deleted directory $line"
+                                echo "---------------------------------"
+                            else
+                                echo "---------------------------------"
+                                echo "Failed to delete directory $line"
+                                echo "---------------------------------"
+                            fi
+                        done < '''+env.STALE_PATHS_FILE+'''
+                        > '''+env.STALE_PATHS_FILE+'''
+                    else
+                        echo "---------------------------------"
+                        echo "No stale repos present!"
+                        echo "---------------------------------"
+                    fi
+                else
+                    echo "---------------------------------"
+                    echo "No stale paths file found!"
+                    echo "---------------------------------"
+                fi
+                '''
+
+            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+            echo " "
+            echo "Performing hard reset and clean!"
+            echo " "
+            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+            echo " "
+            repoStatus = sh(returnStatus: true,
+                            script: '''#!/bin/bash
+                                        cd '''+env.SOURCE_DIR+'''
+                                        repo forall -c "git clean -fdx && git reset --hard " -j$(nproc --all) > /dev/null
+                                    '''
+                            )
+
+            if(repoStatus == 0)
+                echo "Hard rest and clean done!"
+            else
+                echo "Hard reset and clean had issues!"
+    }
+
+    stage('Repo sync') {
+            sh  '''#!/bin/bash
+                    cd '''+env.SOURCE_DIR+'''
+                    rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
+                    repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
+                    repo sync --force-sync --no-tags --no-clone-bundle -c -j$(nproc --all)
+                    if [ $? -ne 0 ]; then
+                        exit 1
                     fi
                 '''
+    }
+    
+    stage('Parsing configs data') {
+        delConfigRepos()
+        cloneConfigRepos()
+        repopickTopics()
+        repopickChanges()
+
+        // Fetch common configs and apply
+        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+        echo "Fetching common configuration"
+        echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
+        setConfigsData("common_config", false)
+        delConfigRepos()
+        cloneConfigRepos()
+        repopickTopics()
+        repopickChanges()
+    }
+
+    stage('Device lunch') {
+        try {
+            deviceLunch()
+        } catch (Exception e) {
+            slackThreadResp.addReaction("thumbsdown")
+            slackThreadResp.addReaction("x")
+            sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
+            currentBuild.description = "Device lunch issue"
+            currentBuild.result = 'FAILURE'
+            sh "exit 1"
         }
+    }
 
-        stage("Hard reset") {
-                sh '''#!/bin/bash +x
-                    cd '''+env.SOURCE_DIR+'''
-
-                    if [ -f '''+env.STALE_PATHS_FILE+''' ]; then
-                        txt_content=$(cat '''+env.STALE_PATHS_FILE+''')
-                        if [ "$txt_content" != "" ]; then
-                            echo "------------------------------------------"
-                            echo "Deleting stale repos from previous build"
-                            echo "------------------------------------------"
-                            while IFS= read -r line
-                            do
-                                cd '''+env.SOURCE_DIR+'''
-                                rm -rf "$line" > /dev/null
-                                if [ $? -eq 0 ]; then
-                                    echo "---------------------------------"
-                                    echo "Deleted directory $line"
-                                    echo "---------------------------------"
-                                else
-                                    echo "---------------------------------"
-                                    echo "Failed to delete directory $line"
-                                    echo "---------------------------------"
-                                fi
-                            done < '''+env.STALE_PATHS_FILE+'''
-                            > '''+env.STALE_PATHS_FILE+'''
-                        else
-                            echo "---------------------------------"
-                            echo "No stale repos present!"
-                            echo "---------------------------------"
-                        fi
-                    else
-                        echo "---------------------------------"
-                        echo "No stale paths file found!"
-                        echo "---------------------------------"
-                    fi
-                    '''
-
-                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                echo " "
-                echo "Performing hard reset and clean!"
-                echo " "
-                echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                echo " "
-                repoStatus = sh(returnStatus: true,
-                                script: '''#!/bin/bash
-                                            cd '''+env.SOURCE_DIR+'''
-                                            repo forall -c "git clean -fdx && git reset --hard " -j$(nproc --all) > /dev/null
-                                        '''
-                                )
-
-                if(repoStatus == 0)
-                    echo "Hard rest and clean done!"
-                else
-                    echo "Hard reset and clean had issues!"
+    stage('Compiling') {
+        try {
+            deviceCompile()
+        } catch (Exception e) {
+            slackThreadResp.addReaction("thumbsdown")
+            slackThreadResp.addReaction("x")
+            sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
+            currentBuild.description = "Compile error"
+            currentBuild.result = 'FAILURE'
+            sh "exit 1"
         }
+    }
 
-        stage('Repo sync') {
-                sh  '''#!/bin/bash
-                        cd '''+env.SOURCE_DIR+'''
-                        rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                        repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
-                        repo sync --force-sync --no-tags --no-clone-bundle -c -j$(nproc --all)
-                        if [ $? -ne 0 ]; then
-                            exit 1
-                        fi
-                    '''
+    stage("Upload & Notify") {
+        upload()
+
+        if (env.buildvariant == "both") {
+            sendSlackNotify("*|Stage(1/2) VANILLA| Build finished for ${DEVICE}*", "${BUILD_URL}")
+        } else {
+            sendSlackNotify ("*(${env.buildvariant.toUpperCase()}) Build finished for ${DEVICE}*", "${BUILD_URL}")
         }
         
-        stage('Parsing configs data') {
-            delConfigRepos()
-            cloneConfigRepos()
-            repopickTopics()
-            repopickChanges()
+        genOTA()
+        mirror2()
+        mirror3()
+    }
 
-            // Fetch common configs and apply
-            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-            echo "Fetching common configuration"
-            echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-            setConfigsData("common_config", false)
-            delConfigRepos()
-            cloneConfigRepos()
-            repopickTopics()
-            repopickChanges()
-        }
+    // Gapps build stage
+    if(VERSION != "arrow-9.x" && env.bootimage != "yes" && env.buildvariant == "both") {
+        stage("Gapps build") {
 
-        stage('Device lunch') {
-            try {
-                deviceLunch()
-            } catch (Exception e) {
-                slackThreadResp.addReaction("thumbsdown")
-                slackThreadResp.addReaction("x")
-                sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
-                currentBuild.description = "Device lunch issue"
-                currentBuild.result = 'FAILURE'
-                sh "exit 1"
-            }
-        }
-
-        stage('Compiling') {
-            try {
-                deviceCompile()
-            } catch (Exception e) {
-                slackThreadResp.addReaction("thumbsdown")
-                slackThreadResp.addReaction("x")
-                sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
-                currentBuild.description = "Compile error"
-                currentBuild.result = 'FAILURE'
-                sh "exit 1"
-            }
-        }
-
-        stage("Upload & Notify") {
-            upload()
-
-            if (env.buildvariant == "both") {
-                sendSlackNotify("*|Stage(1/2) VANILLA| Build finished for ${DEVICE}*", "${BUILD_URL}")
-            } else {
-                sendSlackNotify ("*(${env.buildvariant.toUpperCase()}) Build finished for ${DEVICE}*", "${BUILD_URL}")
-            }
-            
-            genOTA()
-            mirror2()
-            mirror3()
-        }
-
-        // Gapps build stage
-        if(VERSION != "arrow-9.x" && env.bootimage != "yes" && env.buildvariant == "both") {
-            stage("Gapps build") {
-
-                stage("Device lunch") {
-                    env.buildvariant = "gapps"
-                    try {
-                        deviceLunch()
-                    } catch (Exception e) {
-                        slackThreadResp.addReaction("thumbsdown")
-                        slackThreadResp.addReaction("x")
-                        sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
-                        currentBuild.description = "Device lunch issue"
-                        currentBuild.result = 'FAILURE'
-                        sh "exit 1"
-                    }
-                }
-
-                stage("Compiling") {
-                    try {
-                        deviceCompile()
-                    } catch (Exception e) {
-                        slackThreadResp.addReaction("thumbsdown")
-                        slackThreadResp.addReaction("x")
-                        sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
-                        currentBuild.description = "Compile error"
-                        currentBuild.result = 'FAILURE'
-                        sh "exit 1"
-                    }
-                }
-
-                stage("Upload & Notify") {
-                    upload()
-
-                    sendSlackNotify("*|Stage(2/2) GAPPS| Build finished for ${DEVICE}*", "${BUILD_URL}")
-                    
-                    genOTA()
-                    mirror2()
-                    mirror3()
+            stage("Device lunch") {
+                env.buildvariant = "gapps"
+                try {
+                    deviceLunch()
+                } catch (Exception e) {
+                    slackThreadResp.addReaction("thumbsdown")
+                    slackThreadResp.addReaction("x")
+                    sendSlackNotify("Device lunch failed!", "${BUILD_URL}")
+                    currentBuild.description = "Device lunch issue"
+                    currentBuild.result = 'FAILURE'
+                    sh "exit 1"
                 }
             }
+
+            stage("Compiling") {
+                try {
+                    deviceCompile()
+                } catch (Exception e) {
+                    slackThreadResp.addReaction("thumbsdown")
+                    slackThreadResp.addReaction("x")
+                    sendSlackNotify("Device compile/bacon error!", "${BUILD_URL}")
+                    currentBuild.description = "Compile error"
+                    currentBuild.result = 'FAILURE'
+                    sh "exit 1"
+                }
+            }
+
+            stage("Upload & Notify") {
+                upload()
+
+                sendSlackNotify("*|Stage(2/2) GAPPS| Build finished for ${DEVICE}*", "${BUILD_URL}")
+                
+                genOTA()
+                mirror2()
+                mirror3()
+            }
         }
-        if(DEVICE_PROFILE == "test") {
-            buildNotify()
-        }
+    }
+    if(DEVICE_PROFILE == "test") {
+        buildNotify()
     }
 }
 
