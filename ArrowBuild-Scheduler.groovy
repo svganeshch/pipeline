@@ -127,6 +127,13 @@ node("master") {
                 for(device in activeDevices) {
                     String assign_node = null
 
+                    if(!version.isEmpty()) {
+                        if(version.contains("community")) {
+                            version = version.split('_')[0]
+                            isCommunity = true
+                        }
+                    }
+
                     // Force node if specified
                     if(!force_node.isEmpty() && force_node != "default") {
                         force_node = force_node.trim()
@@ -134,12 +141,6 @@ node("master") {
                         assignNode(force_node, device)
                     } else {
                         /* Auto or Explicit assign nodes */
-                        if(!version.isEmpty()) {
-                            if(version.contains("community")) {
-                                version = version.split('_')[0]
-                                isCommunity = true
-                            }
-                        }
                         // set infra urls now
                         setInfraUrls(version)
 
