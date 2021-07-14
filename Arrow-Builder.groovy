@@ -125,13 +125,13 @@ node(ASSIGNED_NODE) {
                 cd '''+env.SOURCE_DIR+'''
                 source build/envsetup.sh > /dev/null
 
-                if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                    if grep -w -q "/media/tempo" <<< $(df -h); then
-                        disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+                if [ '''+ASSIGNED_NODE+''' == "Arrow-4" ]; then
+                    if grep -w -q "/OUT" <<< $(df -h); then
+                        disk_size=$(df -h /OUT | awk 'NR == 2 {print $2}' | sed 's/.$//')
                         if [ $disk_size -ge 100 ]; then
-                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /media/tempo | bc"
+                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /OUT | bc"
                             export is_ramdisk=yes
-                            export OUT_DIR=/media/tempo
+                            export OUT_DIR=/OUT
                             echo "---------------------------------"
                             echo "BUILD OUT SET TO $OUT_DIR"
                             echo "---------------------------------"
@@ -175,7 +175,7 @@ node(ASSIGNED_NODE) {
                 echo " "
                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                 if [ $is_ramdisk == "yes" ]; then
-                    rm -rf /media/tempo/target/product/{*,.*}
+                    rm -rf /OUT/target/product/{*,.*}
                 else
                     rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
                 fi
@@ -206,7 +206,7 @@ node(ASSIGNED_NODE) {
                     echo " "
                     echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                     if [ $is_ramdisk == "yes" ]; then
-                        rm -rf /media/tempo/{*,.*}
+                        rm -rf /OUT/{*,.*}
 
                         echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
                         echo " "
@@ -763,13 +763,13 @@ public def deviceCompile() {
             fi
             
             # Set ramdisk
-            if [ '''+ASSIGNED_NODE+''' == "Arrow-5" ]; then
-                if grep -w -q "/media/tempo" <<< $(df -h); then
-                    disk_size=$(df -h /media/tempo | awk 'NR == 2 {print $2}' | sed 's/.$//')
+            if [ '''+ASSIGNED_NODE+''' == "Arrow-4" ]; then
+                if grep -w -q "/OUT" <<< $(df -h); then
+                    disk_size=$(df -h /OUT | awk 'NR == 2 {print $2}' | sed 's/.$//')
                     if [ $disk_size -ge 100 ]; then
-                        export is_node5=yes
+                        export is_node4=yes
                         export USE_CCACHE=0
-                        export OUT_DIR=/media/tempo
+                        export OUT_DIR=/OUT
                         echo "---------------------------------"
                         echo "BUILD OUT SET TO $OUT_DIR"
                         echo "---------------------------------"
@@ -795,13 +795,13 @@ public def deviceCompile() {
             echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
 
             if [ '''+env.bootimage+''' = "yes" ]; then
-                if [ $is_node5 = "yes" ]; then
+                if [ $is_node4 = "yes" ]; then
                     m bootimage -j144
                 else
                     mka bootimage
                 fi
             else
-                if [ $is_node5 = "yes" ]; then
+                if [ $is_node4 = "yes" ]; then
                     m installclean -j144
                     m bacon -j144
                 else
