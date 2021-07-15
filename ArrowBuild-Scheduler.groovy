@@ -195,7 +195,7 @@ node("master") {
                             echo "Triggering build for ${n5dev}"
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n5dev),
-                                string(name: 'ASSIGNED_NODE', value: ""),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-5"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
                                 string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
@@ -216,7 +216,7 @@ node("master") {
                             echo "Triggering build for ${n4dev}"
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n4dev),
-                                string(name: 'ASSIGNED_NODE', value: ""),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-4"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
                                 string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
@@ -237,7 +237,7 @@ node("master") {
                             echo "Triggering build for ${n3dev}"
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n3dev),
-                                string(name: 'ASSIGNED_NODE', value: ""),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-3"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
                                 string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
@@ -258,7 +258,7 @@ node("master") {
                             echo "Triggering build for ${n2dev}"
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n2dev),
-                                string(name: 'ASSIGNED_NODE', value: ""),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-2"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
                                 string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
@@ -279,7 +279,7 @@ node("master") {
                             echo "Triggering build for ${n1dev}"
                             build job: 'Arrow-Builder', parameters: [
                                 string(name: 'DEVICE', value: n1dev),
-                                string(name: 'ASSIGNED_NODE', value: ""),
+                                string(name: 'ASSIGNED_NODE', value: "Arrow-1"),
                                 string(name: 'BUILD_TIMESTAMP', value: calcDate() + calcTimestamp()),
                                 string(name: 'VERSION', value: version),
                                 string(name: 'IS_COMMUNITY', value: isCommunity.toString()),
