@@ -767,7 +767,6 @@ public def deviceCompile() {
                 if grep -w -q "/OUT" <<< $(df -h); then
                     disk_size=$(df -h /OUT | awk 'NR == 2 {print $2}' | sed 's/.$//')
                     if [ $disk_size -ge 100 ]; then
-                        export is_node4=yes
                         export USE_CCACHE=1
                         export OUT_DIR=/OUT
                         echo "---------------------------------"
@@ -795,19 +794,10 @@ public def deviceCompile() {
             echo BUILD_OUT_DIR $OUT >> '''+env.TG_VARS_FILE+'''
 
             if [ '''+env.bootimage+''' = "yes" ]; then
-                if [ $is_node4 = "yes" ]; then
-                    m bootimage -j144
-                else
-                    mka bootimage
-                fi
+                mka bootimage
             else
-                if [ $is_node4 = "yes" ]; then
-                    m installclean -j144
-                    m bacon -j144
-                else
-                    mka installclean
-                    mka bacon
-                fi
+                mka installclean
+                mka bacon
             fi
         '''
     
