@@ -760,16 +760,11 @@ public def deviceCompile() {
             
             # Set ramdisk
             if [ '''+ASSIGNED_NODE+''' == "Arrow-4" ]; then
-                if grep -w -q "/OUT" <<< $(df -h); then
-                    disk_size=$(df -h /OUT | awk 'NR == 2 {print $2}' | sed 's/.$//')
-                    if [ $disk_size -ge 100 ]; then
                         export USE_CCACHE=1
                         export OUT_DIR=/OUT
                         echo "---------------------------------"
                         echo "BUILD OUT SET TO $OUT_DIR"
                         echo "---------------------------------"
-                    fi
-                fi
             fi
 
             # Perform lunch for the main device as we might be needing them
