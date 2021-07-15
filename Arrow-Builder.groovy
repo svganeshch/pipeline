@@ -129,19 +129,12 @@ node(ASSIGNED_NODE) {
                 source build/envsetup.sh > /dev/null
 
                 if [ '''+ASSIGNED_NODE+''' == "Arrow-4" ]; then
-                    if grep -w -q "/OUT" <<< $(df -h); then
-                        disk_size=$(df -h /OUT | awk 'NR == 2 {print $2}' | sed 's/.$//')
-                        if [ $disk_size -ge 100 ]; then
-                            avail_space="stat -f -c '%a*%S/1024/1024/1024' /OUT | bc"
-                            export is_ramdisk=yes
-                            export OUT_DIR=/OUT
-                            echo "---------------------------------"
-                            echo "BUILD OUT SET TO $OUT_DIR"
-                            echo "---------------------------------"
-                        fi
-                    else
-                        avail_space="stat -f -c '%a*%S/1024/1024/1024' /home | bc"
-                    fi
+                    avail_space="stat -f -c '%a*%S/1024/1024/1024' /OUT | bc"
+                    export is_ramdisk=yes
+                    export OUT_DIR=/OUT
+                    echo "---------------------------------"
+                    echo "BUILD OUT SET TO $OUT_DIR"
+                    echo "---------------------------------"
                 else
                     avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
                 fi
