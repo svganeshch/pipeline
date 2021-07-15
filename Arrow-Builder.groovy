@@ -111,7 +111,10 @@ node(ASSIGNED_NODE) {
 
     env.MAIN_DISK = "/source".toString().trim()
     env.SOURCE_DIR = env.MAIN_DISK + "/arrow".toString().trim()
-    env.CCACHE_DIR = "/ccache" + "/.ccache/" + DEVICE.toString().trim()
+    env.CCACHE_DIR = env.MAIN_DISK + "/.ccache/" + DEVICE.toString().trim()
+    if (ASSIGNED_NODE == "Arrow-4") {
+        env.CCACHE_DIR = "/ccache" + "/.ccache/" + DEVICE.toString().trim()
+    }
     env.STALE_PATHS_FILE = env.MAIN_DISK + "/stale_paths.txt".toString().trim()
     env.TG_VARS_FILE = env.MAIN_DISK + "/tgvars.txt".toString().trim()
 
