@@ -728,6 +728,7 @@ public def deviceCompile() {
             export KBUILD_BUILD_USER=release
             export KBUILD_BUILD_HOST=ArrowOS
             export LOCALVERSION=-Arrow
+            ccache -M 25G
 
             # Rom exports
             if [ '''+env.buildtype+''' = "user" ]; then
