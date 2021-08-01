@@ -538,12 +538,12 @@ public def deviceLunch() {
 
                 if [ $(get_build_var TARGET_CPU_VARIANT) != "generic" ] && [ $(get_build_var TARGET_2ND_CPU_VARIANT) != "generic" ]; then
                     echo "Device target cpu variants not generic!"
-                    exit 0
+                    exit 1
                 fi
 
                 if [ $(get_build_var TARGET_ARCH_VARIANT) != "armv8-a" ] && [ $(get_build_var TARGET_2ND_ARCH_VARIANT) != "armv8-a" ]; then
                     echo "Device target arch not matching!"
-                    exit 0
+                    exit 1
                 fi
                 if [ $? -ne 0 ]; then
                     echo "Device lunch FAILED!"
