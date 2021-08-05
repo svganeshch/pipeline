@@ -87,6 +87,7 @@ environment {
     def xda_link
     def global_override
     def default_buildtype_state
+    def variant_folder
 
     // tg notify args
     def is_tgnotify
@@ -803,6 +804,17 @@ public def deviceCompile() {
 -----------------------------------------------
 */
 public def upload() {
+    // Set variant folder
+    if(env.test_build == "yes" && IS_COMMUNITY == "true") {
+        env.variant_folder = "community_experiments"
+    } else if(env.test_build == "yes" && IS_COMMUNITY == "false") {
+        env.variant_folder = "experiments"
+    } else if(env.test_build == "no" && env.is_official == "yes") {
+        env.variant_folder = "official"
+    } else if(env.test_build == "no" && IS_COMMUNITY == "true") {
+        env.variant_folder = "community"
+    }
+
     sh  '''#!/bin/bash
             
             cd '''+env.SOURCE_DIR+'''
@@ -817,11 +829,7 @@ public def upload() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    if [ '''+IS_COMMUNITY+''' = "true" ]; then
-                           script -q -c "yes | rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community_experiments/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
-                    else
-                           script -q -c "yes | rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/experiments/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
-                    fi
+                    script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO ARROW SERVER"
                         notify=0
@@ -832,11 +840,7 @@ public def upload() {
                     TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
-                    if [ '''+IS_COMMUNITY+''' = "true" ]; then
-                           script -q -c "yes | rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/arrow-$(echo '''+env.TG_ARROW_VERSION+''' | cut -d "v" -f 2)/community/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
-                    else
-                           script -q -c "yes | rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/official/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
-                    fi
+                    script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO ARROW SERVERS"
                         notify=0
@@ -932,7 +936,10 @@ public def mirror2() {
     build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
     
     build job: 'mirror2', parameters: [
-        string(name: 'BUILD_ARTIFACT', value: build_artifact)
+        string(name: 'BUILD_ARTIFACT', value: build_artifact),
+        string(name: 'version', value: VERSION),
+        string(name: 'variant', value: variant_folder),
+        string(name: 'device', value: DEVICE)
     ], propagate: false, wait: false
 }
 
@@ -940,7 +947,10 @@ public def mirror3() {
     build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
     
     build job: 'mirror3', parameters: [
-        string(name: 'BUILD_ARTIFACT', value: build_artifact)
+        string(name: 'BUILD_ARTIFACT', value: build_artifact),
+        string(name: 'version', value: VERSION),
+        string(name: 'variant', value: variant_folder),
+        string(name: 'device', value: DEVICE)
     ], propagate: false, wait: false
 }
 
