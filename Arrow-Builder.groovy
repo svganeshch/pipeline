@@ -171,12 +171,14 @@ node(ASSIGNED_NODE) {
                 echo "Nuking product out!"
                 echo " "
                 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-"
-                if [ $is_ramdisk == "yes" ]; then
-                    rm -rf /OUT/target/product/{*,.*}
-                else
-                    rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
+                if [ -d '''+env.SOURCE_DIR+'''/out/target/product ]; then
+                    if [ $is_ramdisk == "yes" ]; then
+                        rm -rf /OUT/target/product/{*,.*}
+                    else
+                        rm -rf '''+env.SOURCE_DIR+'''/out/target/product/{*,.*}
+                    fi
                 fi
-                
+
                 if [ $? -eq 0 ]; then
                     echo "Cleaned up product out dirs!"
                 else
