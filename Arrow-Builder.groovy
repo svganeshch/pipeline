@@ -137,6 +137,7 @@ node(ASSIGNED_NODE) {
                     echo "BUILD OUT SET TO $OUT_DIR"
                     echo "---------------------------------"
                 else
+                    export is_ramdisk=no
                     avail_space="stat -f -c '%a*%S/1024/1024/1024' /source | bc"
                 fi
                 
