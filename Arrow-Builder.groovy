@@ -812,7 +812,7 @@ public def upload() {
         env.variant_folder = "community_experiments"
     } else if(env.test_build == "yes" && IS_COMMUNITY == "false") {
         env.variant_folder = "experiments"
-    } else if(env.test_build == "no" && env.is_official == "yes") {
+    } else if(env.test_build == "no" && env.is_official == "yes" && IS_COMMUNITY == "false") {
         env.variant_folder = "official"
     } else if(env.test_build == "no" && IS_COMMUNITY == "true") {
         env.variant_folder = "community"
