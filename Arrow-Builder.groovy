@@ -535,23 +535,14 @@ public def deviceLunch() {
             if [ ! -z '''+env.buildtype+''' ]; then
                 lunch arrow_'''+DEVICE+'''-'''+env.buildtype+'''
                 
-                # Store roomservice repo paths into our stale file
-                if [ -d '''+env.SOURCE_DIR+'''/.repo/local_manifests ]; then
-                    cat '''+env.SOURCE_DIR+'''/.repo/local_manifests/roomservice.xml | awk '{ print $3 }' | grep "path" | cut -d '"' -f2 >> '''+env.STALE_PATHS_FILE+'''
-                fi
-
-                if [ $(get_build_var TARGET_CPU_VARIANT) != "generic" ] && [ $(get_build_var TARGET_2ND_CPU_VARIANT) != "generic" ]; then
-                    echo "Device target cpu variants not generic!"
-                    exit 1
-                fi
-
-                if [ $(get_build_var TARGET_ARCH_VARIANT) != "armv8-a" ] && [ $(get_build_var TARGET_2ND_ARCH_VARIANT) != "armv8-a" ]; then
-                    echo "Device target arch not matching!"
-                    exit 1
-                fi
                 if [ $? -ne 0 ]; then
                     echo "Device lunch FAILED!"
                     exit 1
+                fi
+                
+                # Store roomservice repo paths into our stale file
+                if [ -d '''+env.SOURCE_DIR+'''/.repo/local_manifests ]; then
+                    cat '''+env.SOURCE_DIR+'''/.repo/local_manifests/roomservice.xml | awk '{ print $3 }' | grep "path" | cut -d '"' -f2 >> '''+env.STALE_PATHS_FILE+'''
                 fi
             else
                 echo "No buildtype specified!"
