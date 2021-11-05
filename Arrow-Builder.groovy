@@ -348,6 +348,13 @@ node(ASSIGNED_NODE) {
         }
         
         genOTA()
+        
+        if (ASSIGNED_NODE == "Arrow-3") {
+            mirror1()
+            mirror3()
+            
+            return
+        }
         mirror2()
         mirror3()
     }
@@ -389,6 +396,13 @@ node(ASSIGNED_NODE) {
                 sendSlackNotify("*|Stage(2/2) GAPPS| Build finished for ${DEVICE}*", "${BUILD_URL}")
                 
                 genOTA()
+                
+                if (ASSIGNED_NODE == "Arrow-3") {
+                    mirror1()
+                    mirror3()
+            
+                    return
+                }
                 mirror2()
                 mirror3()
             }
@@ -823,7 +837,11 @@ public def upload() {
 
             if [ -f $TO_UPLOAD ]; then
                 if [ '''+env.test_build+''' = "yes" ]; then
-                    script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    if [ '''+ASSIGNED_NODE+''' == "Arrow-3" ]; then
+                        script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    else
+                        script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TEST BUILD TO ARROW SERVER"
                         notify=0
@@ -834,7 +852,11 @@ public def upload() {
                     TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
-                    script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    if [ '''+ASSIGNED_NODE+''' == "Arrow-3" ]; then
+                        script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror2.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    else
+                        script -q -c "rsync -rav --info=progress2 $TO_UPLOAD root@get.mirror1.arrowos.net:/mnt/HDD1/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
+                    fi
                     if [ $? -eq 0 ]; then
                         echo "SUCCESSFULLY UPLOADED TO ARROW SERVERS"
                         notify=0
@@ -924,6 +946,17 @@ public def buildNotify() {
     }
 
     sendSlackNotify("*BUILD:*", null, "${tg_down_url}")
+}
+
+public def mirror1() {
+    build_artifact = getTgVars("BUILD_ARTIFACT").toString().trim()
+    
+    build job: 'mirror1', parameters: [
+        string(name: 'BUILD_ARTIFACT', value: build_artifact),
+        string(name: 'version', value: VERSION),
+        string(name: 'variant', value: variant_folder),
+        string(name: 'device', value: DEVICE)
+    ], propagate: false, wait: false
 }
 
 public def mirror2() {
