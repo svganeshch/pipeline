@@ -705,7 +705,7 @@ public def repopickChanges() {
                 cd '''+env.SOURCE_DIR+'''
                 source build/envsetup.sh > /dev/null
 
-                repopick '''+changeNum+'''
+                repopick '''+changeNum+''' + " -g ssh://arrowos-gerrit@review.arrowos.net"
                 if [ $? -eq 0 ]; then
                     echo "---------------------------------"
                     echo "Repopicked change number '''+changeNum+''' "
