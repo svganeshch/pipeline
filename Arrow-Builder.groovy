@@ -749,6 +749,13 @@ public def deviceCompile() {
             export ARROW_OFFICIAL=true
             export WITHOUT_CHECK_API=true
             export SKIP_ABI_CHECKS=true
+            # Disable APEX compression to workaround Updater issues.
+            export OVERRIDE_PRODUCT_COMPRESSED_APEX=false
+
+            # TODO: Force flatten apexes
+            # ro.apex.updatable must be force disabled in /product for prebuilt OEM vendor devices
+            # Some devices like Pixel 6/pro have prebuilt cam apex which have issues with flatten apex
+            #export OVERRIDE_TARGET_FLATTEN_APEX=true
 
             if [ '''+env.TG_BUILD_ZIP_TYPE+''' = "GAPPS" ]; then
                 export ARROW_GAPPS=true
