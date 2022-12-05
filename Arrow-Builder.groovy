@@ -287,8 +287,8 @@ node(ASSIGNED_NODE) {
             sh  '''#!/bin/bash
                     cd '''+env.SOURCE_DIR+'''
                     rm -rf '''+env.SOURCE_DIR+'''/.repo/local_manifests
-                    repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' --depth=1 > /dev/null
-                    repo sync --force-sync --no-tags --no-clone-bundle -c -j$(nproc --all)
+                    repo init -u https://github.com/ArrowOS/android_manifest.git -b '''+VERSION+''' > /dev/null
+                    repo sync --force-sync -c -j$(nproc --all)
                     if [ $? -ne 0 ]; then
                         exit 1
                     fi
