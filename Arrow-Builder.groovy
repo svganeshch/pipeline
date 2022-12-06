@@ -424,7 +424,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
         def which_db = IS_COMMUNITY == "true" ? VERSION + "_community" : VERSION
         which_db = DEVICE_PROFILE == "test" ? "test_profile_" + which_db : which_db
         def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
-            'mirror1', 'get.mirror1.arrowos.net@69', 'com.mysql.jdbc.Driver')
+            'jenkins', 'jenkinsarrowinthearse', 'com.mysql.jdbc.Driver')
 
         def md = dbcon.connection.metaData
         def deviceTable = md.getTables(null, null, whichDevice, null)
