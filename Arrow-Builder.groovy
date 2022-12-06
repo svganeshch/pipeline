@@ -423,7 +423,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
     try {
         def which_db = IS_COMMUNITY == "true" ? VERSION + "_community" : VERSION
         which_db = DEVICE_PROFILE == "test" ? "test_profile_" + which_db : which_db
-        def dbcon = Sql.newInstance('jdbc:mysql://localhost:3306/configs_' +which_db,
+        def dbcon = Sql.newInstance('jdbc:mysql://host.docker.internal:3306/configs_' +which_db,
             'jenkins', 'jenkinsarrowinthearse', 'com.mysql.jdbc.Driver')
 
         def md = dbcon.connection.metaData
