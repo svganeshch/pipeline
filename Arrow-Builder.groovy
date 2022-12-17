@@ -105,13 +105,6 @@ environment {
 }
 
 node(ASSIGNED_NODE) {
-    
-    if (DEVICE_PROFILE?.trim()) {
-        currentBuild.result = 'ABORTED'
-        currentBuild.description = "No profile selected"
-        return
-    }
-    
     env.ASSIGNED_NODE = NODE_NAME
     currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
     
@@ -429,7 +422,7 @@ node(ASSIGNED_NODE) {
 public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
     try {
         def which_db = IS_COMMUNITY == "true" ? VERSION + "_community" : VERSION
-        which_db = DEVICE_PROFILE == "test" ? "test_profile_" + which_db : which_db
+        which_db = DEVICE_PROFILE == "official" ? which_db : "test_profile_" + which_db
         def dbcon = Sql.newInstance('jdbc:mysql://host.docker.internal:3306/configs_' +which_db,
             'jenkins', 'jenkinsarrowinthearse', 'com.mysql.jdbc.Driver')
 
