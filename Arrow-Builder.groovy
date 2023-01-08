@@ -105,6 +105,13 @@ environment {
 }
 
 node(ASSIGNED_NODE) {
+    
+    if (DEVICE_PROFILE == null || DEVICE_PROFILE.trim().isEmpty()) {
+        currentBuild.result = 'ABORTED'
+        currentBuild.description = "No profile selected"
+        return
+    }
+    
     env.ASSIGNED_NODE = NODE_NAME
     currentBuild.description = "Executing @ ${ASSIGNED_NODE}"
     
