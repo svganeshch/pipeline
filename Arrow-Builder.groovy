@@ -420,7 +420,7 @@ public def setConfigsData(String whichDevice, Boolean isGlobalOvr) {
         which_db = DEVICE_PROFILE == "official" ? which_db : "test_profile_" + which_db
         Class.forName("com.mysql.jdbc.Driver")
         def dbcon = Sql.newInstance('jdbc:mysql://get.mirror1.arrowos.net:3306/configs_' +which_db,
-            'arrow_jenkins', 'sjfwy6MX4PBc3Qs5', 'com.mysql.jdbc.Driver')
+            'jenkins', 'sjfwy6MX4PBc3Qs5', 'com.mysql.jdbc.Driver')
 
         def md = dbcon.connection.metaData
         def deviceTable = md.getTables(null, null, whichDevice, null)
