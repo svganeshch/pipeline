@@ -299,6 +299,9 @@ node(ASSIGNED_NODE) {
                     if [ $? -ne 0 ]; then
                         exit 1
                     fi
+
+                    TARGET_DIR=vendor/arrow-priv
+                    git -C "$TARGET_DIR" pull || git clone git@github.com:ArrowOS/android_vendor_arrow-priv.git "$TARGET_DIR"
                 '''
     }
     
