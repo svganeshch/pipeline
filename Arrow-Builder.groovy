@@ -851,7 +851,7 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO TEST BUILD ARROW SERVER"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
+                    TG_DOWN_URL="https://arrowos.net/download'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 else
                     script -q -c "rsync -rav --mkpath --info=progress2 $TO_UPLOAD root@get.mirror3.arrowos.net:/var/www/mirror3/builds/'''+VERSION+'''/'''+env.variant_folder+'''/'''+DEVICE+'''/" | stdbuf -oL tr '\r' '\n'
@@ -862,7 +862,7 @@ public def upload() {
                         echo "FAILED TO UPLOAD TO ARROW SERVERS"
                         notify=1
                     fi
-                    TG_DOWN_URL="https://downloads.arrowos.net/'''+DEVICE+'''"
+                    TG_DOWN_URL="https://arrowos.net/download'''+DEVICE+'''"
                     echo TG_TITLE "**New ['''+DEVICE+''']($TG_DOWN_URL) build [(`date +'%d-%m-%Y'`)](https://changelog.arrowos.net) is out! ('''+VERSION+''')**" >> '''+env.TG_VARS_FILE+'''
                 fi
 
